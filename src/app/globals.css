@@ -1,0 +1,139 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,300;9..144,500&family=DM+Sans:wght@300;400;500;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== LIGHT THEME ===== */
+:root,
+[data-theme="light"] {
+  --bg: #f7f5f0;
+  --surface: #ffffff;
+  --surface2: #f0ede6;
+  --surface3: #e8e4db;
+  --border: #e2ddd4;
+  --border-dark: #c8c2b4;
+  --text: #1a1814;
+  --text-2: #6b6457;
+  --text-3: #a09890;
+  --green: #2d6a4f;
+  --green-bg: #d8f3e3;
+  --green-br: #86efac;
+  --red: #9b2226;
+  --red-bg: #fde8e8;
+  --red-br: #fca5a5;
+  --amber: #7d4e00;
+  --amber-bg: #fef3c7;
+  --amber-br: #fcd34d;
+  --teal: #0f766e;
+  --teal-bg: #ccfbf1;
+  --teal-br: #5eead4;
+  --purple: #5b21b6;
+  --purple-bg: #ede9fe;
+  --purple-br: #c4b5fd;
+  --shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  --shadow-hover: 0 2px 8px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
+}
+
+/* ===== DARK THEME ===== */
+[data-theme="dark"] {
+  --bg: #111114;
+  --surface: #18181c;
+  --surface2: #202026;
+  --surface3: #28282f;
+  --border: rgba(255,255,255,0.07);
+  --border-dark: rgba(255,255,255,0.14);
+  --text: #ededf0;
+  --text-2: #888896;
+  --text-3: #4e4e5c;
+  --green: #34d17a;
+  --green-bg: rgba(52,209,122,0.1);
+  --green-br: rgba(52,209,122,0.3);
+  --red: #f06060;
+  --red-bg: rgba(240,96,96,0.1);
+  --red-br: rgba(240,96,96,0.3);
+  --amber: #e8a820;
+  --amber-bg: rgba(232,168,32,0.1);
+  --amber-br: rgba(232,168,32,0.3);
+  --teal: #3ec6c6;
+  --teal-bg: rgba(62,198,198,0.1);
+  --teal-br: rgba(62,198,198,0.28);
+  --purple: #a78bfa;
+  --purple-bg: rgba(167,139,250,0.1);
+  --purple-br: rgba(167,139,250,0.3);
+  --shadow: 0 1px 4px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
+  --shadow-hover: 0 2px 8px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  transition: background 0.3s, color 0.3s;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-dark); border-radius: 2px; }
+
+/* Input/select base */
+input, select, textarea {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+  width: 100%;
+  -webkit-appearance: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--border-dark);
+  background: var(--surface);
+}
+[data-theme="dark"] input:focus,
+[data-theme="dark"] select:focus,
+[data-theme="dark"] textarea:focus {
+  border-color: var(--teal-br);
+}
+input.ai-auto {
+  background: var(--teal-bg) !important;
+  border-color: var(--teal-br) !important;
+}
+textarea { resize: vertical; min-height: 72px; line-height: 1.6; }
+select option { background: var(--surface); }
+
+/* AI filled field indicator */
+.ai-filled { position: relative; }
+.ai-filled::after {
+  content: 'AI';
+  position: absolute;
+  right: 8px; top: 50%; transform: translateY(-50%);
+  font-size: 9px;
+  font-family: 'DM Mono', monospace;
+  color: var(--teal);
+  background: var(--teal-bg);
+  padding: 1px 5px;
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+/* Animations */
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+@keyframes spin { to{transform:rotate(360deg)} }
+@keyframes scan { 0%{transform:translateX(-100%)} 100%{transform:translateX(380%)} }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+.animate-fadeIn { animation: fadeIn 0.35s ease; }
+.animate-pulse-dot { animation: pulse 1.5s infinite; }
+.animate-spin-custom { animation: spin 0.8s linear infinite; }
+.animate-scan { animation: scan 1.8s ease-in-out infinite; }
+.animate-blink { animation: blink 1.2s ease-in-out infinite; }
