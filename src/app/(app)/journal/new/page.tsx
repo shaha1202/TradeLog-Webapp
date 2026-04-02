@@ -28,6 +28,7 @@ export default function NewTradePage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [today, setToday] = useState("");
 
   // Upload state
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -66,6 +67,41 @@ export default function NewTradePage() {
   const [toast, setToast] = useState({ show: false, message: "" });
   const [tradeCount, setTradeCount] = useState(0);
 
+  // Session draft key
+  const DRAFT_KEY = "trade_draft_session";
+
+  useEffect(() => {
+    setToday(new Date().toLocaleDateString("uz-UZ"));
+  }, []);
+
+  // Restore session draft on mount
+  useEffect(() => {
+    try {
+      const draft = sessionStorage.getItem(DRAFT_KEY);
+      if (draft) {
+        const d = JSON.parse(draft);
+        if (d.asset) setAsset(d.asset);
+        if (d.timeframe) setTimeframe(d.timeframe);
+        if (d.session) setSession(d.session);
+        if (d.direction) setDirection(d.direction);
+        if (d.entry) setEntry(d.entry);
+        if (d.sl) setSl(d.sl);
+        if (d.tp) setTp(d.tp);
+        if (d.lotSize) setLotSize(d.lotSize);
+        if (d.pnl) setPnl(d.pnl);
+        if (d.result) setResult(d.result);
+        if (d.htfTrend) setHtfTrend(d.htfTrend);
+        if (d.narrative) setNarrative(d.narrative);
+        if (d.feedback) setFeedback(d.feedback);
+        if (d.selectedConfluence) setSelectedConfluence(d.selectedConfluence);
+        if (d.moods) setMoods(d.moods);
+        if (d.stars) setStars(d.stars);
+        if (d.wentWell) setWentWell(d.wentWell);
+        if (d.improve) setImprove(d.improve);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
   useEffect(() => {
     const loadProfile = async () => {
       const supabase = createClient();
@@ -78,9 +114,14 @@ export default function NewTradePage() {
       ]);
       if (p) {
         setProfile(p as Profile);
-        setRiskPercent(String(p.default_risk ?? 1));
-        if (p.account_balance && p.default_risk) {
-          setRiskDollar(((p.account_balance * p.default_risk) / 100).toFixed(2));
+        // Only set risk defaults if no session draft exists
+        const draft = sessionStorage.getItem(DRAFT_KEY);
+        const hasDraft = draft && JSON.parse(draft).asset;
+        if (!hasDraft) {
+          setRiskPercent(String(p.default_risk ?? 1));
+          if (p.account_balance && p.default_risk) {
+            setRiskDollar(((p.account_balance * p.default_risk) / 100).toFixed(2));
+          }
         }
         // Load custom checklist/confluence from settings
         const saved = localStorage.getItem("custom_checklist");
@@ -123,6 +164,30 @@ export default function NewTradePage() {
   }, [profile, riskPercent]);
 
   useEffect(() => { calcRiskDollar(); }, [calcRiskDollar]);
+
+  // Auto-calculate P&L from result + riskDollar + rr
+  useEffect(() => {
+    const rd = parseFloat(riskDollar);
+    if (isNaN(rd) || rd <= 0) return;
+    if (result === "win" && rr !== null) {
+      setPnl((rd * rr).toFixed(2));
+    } else if (result === "loss") {
+      setPnl((-rd).toFixed(2));
+    } else if (result === "be") {
+      setPnl("0");
+    }
+  }, [result, riskDollar, rr]);
+
+  // Persist form to sessionStorage (survives navigation within session)
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify({
+        asset, timeframe, session, direction, entry, sl, tp,
+        lotSize, pnl, result, htfTrend, narrative, feedback,
+        selectedConfluence, moods, stars, wentWell, improve,
+      }));
+    } catch { /* ignore */ }
+  }, [asset, timeframe, session, direction, entry, sl, tp, lotSize, pnl, result, htfTrend, narrative, feedback, selectedConfluence, moods, stars, wentWell, improve]);
 
   const handleFile = useCallback(async (file: File) => {
     setImageFile(file);
@@ -228,8 +293,19 @@ export default function NewTradePage() {
     if (error) {
       setToast({ show: true, message: "Xato yuz berdi: " + error.message });
     } else {
-      router.push("/journal");
-      router.refresh();
+      // Auto-update account balance with trade P&L
+      if (profile?.account_balance && pnl) {
+        const pnlVal = parseFloat(pnl);
+        if (!isNaN(pnlVal) && pnlVal !== 0) {
+          const supabase2 = createClient();
+          await supabase2.from("profiles").update({
+            account_balance: profile.account_balance + pnlVal,
+          }).eq("id", user.id);
+        }
+      }
+      // Clear session draft
+      sessionStorage.removeItem(DRAFT_KEY);
+      window.location.href = "/journal";
     }
   }
 
@@ -247,7 +323,7 @@ export default function NewTradePage() {
           </p>
         </div>
         <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, color: "var(--text-3)" }}>
-          #{tradeCount + 1} · {new Date().toLocaleDateString("uz-UZ")}
+          #{tradeCount + 1} · {today}
         </div>
       </div>
 

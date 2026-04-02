@@ -13,7 +13,8 @@
       "Bash(sed -i '' 's/const nextConfig: NextConfig = /const nextConfig = /' next.config.mjs)",
       "mcp__Claude_Preview__preview_start",
       "Read(//opt/homebrew/Cellar/node@22/22.22.2/lib/node_modules/npm/bin/**)",
-      "Read(//opt/homebrew/Cellar/node@22/22.22.2/bin/**)"
+      "Read(//opt/homebrew/Cellar/node@22/22.22.2/bin/**)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")"
     ]
   }
 }

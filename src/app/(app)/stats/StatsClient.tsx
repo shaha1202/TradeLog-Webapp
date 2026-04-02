@@ -45,7 +45,7 @@ function calcStats(trades: Trade[]) {
 
 export default function StatsClient({ trades, profile }: { trades: Trade[]; profile: Profile | null }) {
   const [period, setPeriod] = useState(7);
-  const [aiInsight, setAiInsight] = useState<string | null>(null);
+  const [aiInsight, setAiInsight] = useState<{ general: string; strengths: string[]; improvements: string[]; insight: string } | null>(null);
   const [loadingInsight, setLoadingInsight] = useState(false);
   const [insightLoaded, setInsightLoaded] = useState(false);
 
@@ -54,10 +54,14 @@ export default function StatsClient({ trades, profile }: { trades: Trade[]; prof
 
   const periodLabel = period === 7 ? "Bu hafta" : period === 30 ? "Bu oy" : period === 90 ? "So'nggi 3 oy" : "Bu yil";
 
+  // Reset AI insight when period changes
   useEffect(() => {
-    if (filtered.length === 0) { setAiInsight(null); setInsightLoaded(false); return; }
     setAiInsight(null);
     setInsightLoaded(false);
+  }, [period]);
+
+  function fetchAiInsight() {
+    if (filtered.length === 0 || loadingInsight) return;
     setLoadingInsight(true);
 
     const assetSummary = Object.entries(stats.byAsset)
@@ -81,11 +85,11 @@ export default function StatsClient({ trades, profile }: { trades: Trade[]; prof
         avgAdherence: stats.avgAdherence.toFixed(1),
       }),
     })
-      .then((r) => r.text())
-      .then((text) => { setAiInsight(text); setInsightLoaded(true); })
-      .catch(() => { setAiInsight("Tahlil amalga oshmadi."); setInsightLoaded(true); })
+      .then((r) => r.json())
+      .then((data) => { setAiInsight(data); setInsightLoaded(true); })
+      .catch(() => { setInsightLoaded(true); })
       .finally(() => setLoadingInsight(false));
-  }, [period, filtered.length]);
+  }
 
   // P&L bar chart data (last N days)
   const chartData = useMemo(() => {
@@ -131,31 +135,114 @@ export default function StatsClient({ trades, profile }: { trades: Trade[]; prof
 
       {/* AI Insight */}
       <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16, padding: "20px 24px", marginBottom: 20, boxShadow: "var(--shadow)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
-          <div style={{ width: 36, height: 36, background: "var(--teal-bg)", border: "1px solid var(--teal-br)", borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2a10 10 0 100 20A10 10 0 0012 2zM12 16v-4M12 8h.01" stroke="var(--teal)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: insightLoaded ? 16 : 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 36, height: 36, background: "var(--teal-bg)", border: "1px solid var(--teal-br)", borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17H8v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z" stroke="var(--teal)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text)" }}>AI Coach</div>
+              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 1 }}>{periodLabel} statistikasi asosida</div>
+            </div>
           </div>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text)" }}>AI Tavsiya</div>
-            <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>Statistikangizga asoslangan coaching</div>
-          </div>
-        </div>
-        <div style={{ fontSize: 13, lineHeight: 1.7, color: "var(--text-2)" }}>
-          {loadingInsight ? (
-            <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ width: 16, height: 16, border: "2px solid var(--border)", borderTopColor: "var(--teal)", borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }} />
-              Tahlil qilinmoqda...
-            </span>
-          ) : filtered.length === 0 ? (
-            "Bu davrda tradelar yo'q."
-          ) : insightLoaded ? (
-            aiInsight
-          ) : (
-            "Tavsiya yuklanmoqda..."
+          {!insightLoaded && filtered.length > 0 && (
+            <button
+              onClick={fetchAiInsight}
+              disabled={loadingInsight}
+              style={{
+                display: "flex", alignItems: "center", gap: 7, padding: "9px 18px",
+                background: loadingInsight ? "var(--surface2)" : "var(--teal)",
+                color: loadingInsight ? "var(--text-2)" : "white",
+                border: "none", borderRadius: 8, fontFamily: "'DM Sans',sans-serif",
+                fontSize: 12, fontWeight: 500, cursor: loadingInsight ? "not-allowed" : "pointer",
+                transition: "all 0.2s", opacity: loadingInsight ? 0.7 : 1,
+              }}
+            >
+              {loadingInsight ? (
+                <>
+                  <span style={{ width: 14, height: 14, border: "2px solid var(--border)", borderTopColor: "var(--teal)", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" }} />
+                  Tahlil qilinmoqda...
+                </>
+              ) : (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17H8v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  AI Tavsiya olish
+                </>
+              )}
+            </button>
+          )}
+          {insightLoaded && (
+            <button
+              onClick={() => { setAiInsight(null); setInsightLoaded(false); }}
+              style={{
+                padding: "6px 12px", background: "var(--surface2)", color: "var(--text-3)",
+                border: "1px solid var(--border)", borderRadius: 6, fontSize: 11, cursor: "pointer",
+              }}
+            >
+              Yangilash
+            </button>
           )}
         </div>
+        {filtered.length === 0 ? (
+          <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 12 }}>Bu davrda tradelar yo&apos;q.</div>
+        ) : insightLoaded && aiInsight ? (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 4 }}>
+            {/* General */}
+            <div style={{
+              gridColumn: "1 / -1", background: "var(--teal-bg)", border: "1px solid var(--teal-br)",
+              borderRadius: 12, padding: "16px 18px",
+            }}>
+              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--teal)", marginBottom: 8 }}>
+                Umumiy baho
+              </div>
+              <p style={{ fontSize: 13, lineHeight: 1.7, color: "var(--text)", margin: 0 }}>{aiInsight.general}</p>
+            </div>
+            {/* Strengths */}
+            <div style={{ background: "var(--green-bg)", border: "1px solid var(--green-br, var(--border))", borderRadius: 12, padding: "16px 18px" }}>
+              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--green)", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                To&apos;g&apos;ri qilganlar
+              </div>
+              <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+                {aiInsight.strengths.map((s, i) => (
+                  <li key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 12, color: "var(--text)", lineHeight: 1.6, marginBottom: i < aiInsight.strengths.length - 1 ? 6 : 0 }}>
+                    <span style={{ color: "var(--green)", flexShrink: 0, marginTop: 2 }}>✓</span>
+                    {s}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {/* Improvements */}
+            <div style={{ background: "var(--amber-bg)", border: "1px solid var(--amber-br, var(--border))", borderRadius: 12, padding: "16px 18px" }}>
+              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--amber)", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                Yaxshilash kerak
+              </div>
+              <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+                {aiInsight.improvements.map((s, i) => (
+                  <li key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 12, color: "var(--text)", lineHeight: 1.6, marginBottom: i < aiInsight.improvements.length - 1 ? 6 : 0 }}>
+                    <span style={{ color: "var(--amber)", flexShrink: 0, marginTop: 2 }}>→</span>
+                    {s}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {/* Key Insight */}
+            <div style={{ gridColumn: "1 / -1", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 12, padding: "14px 18px", display: "flex", gap: 12, alignItems: "flex-start" }}>
+              <div style={{ width: 28, height: 28, borderRadius: 7, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17H8v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z" stroke="var(--text-2)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 4 }}>Asosiy Insight</div>
+                <p style={{ fontSize: 13, lineHeight: 1.6, color: "var(--text)", margin: 0 }}>{aiInsight.insight}</p>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       {/* P&L Chart */}

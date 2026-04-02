@@ -27,11 +27,13 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
   const [modal, setModal] = useState<ModalType>(null);
   const [toast, setToast] = useState({ show: false, message: "" });
 
+  const STRATEGIES = ["ICT", "SMC", "Classic", "Algo", "Wyckoff", "Price Action", "Supply & Demand", "VSA"];
+
   // Account form
   const [balance, setBalance] = useState(String(profile?.account_balance ?? ""));
   const [riskPct, setRiskPct] = useState(String(profile?.default_risk ?? 1));
   const [currency, setCurrency] = useState(profile?.currency ?? "USD");
-  const [mainPair, setMainPair] = useState(profile?.main_pair ?? "");
+  const [strategy, setStrategy] = useState<string[]>(profile?.strategy ?? []);
 
   // Profile form
   const [fullName, setFullName] = useState(profile?.full_name ?? "");
@@ -61,10 +63,10 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
       account_balance: balance ? parseFloat(balance) : null,
       default_risk: riskPct ? parseFloat(riskPct) : 1,
       currency,
-      main_pair: mainPair || null,
+      strategy: strategy.length > 0 ? strategy : null,
     }).eq("id", userId);
     if (!error) {
-      setProfile((p) => p ? { ...p, account_balance: parseFloat(balance), default_risk: parseFloat(riskPct), currency, main_pair: mainPair } : p);
+      setProfile((p) => p ? { ...p, account_balance: parseFloat(balance), default_risk: parseFloat(riskPct), currency, strategy } : p);
       setModal(null);
       showToast("Hisob sozlamalari saqlandi");
     }
@@ -192,7 +194,7 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
           icon={<rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />}
           iconBg="var(--green-bg)" iconColor="var(--green)"
           name="Hisob hajmi & Risk"
-          sub={profile?.account_balance ? `$${profile.account_balance} · ${profile.default_risk}% risk` : "Kiritilmagan"}
+          sub={profile?.account_balance ? `$${profile.account_balance} · ${profile.default_risk}% risk${profile.strategy?.length ? ` · ${profile.strategy.join(", ")}` : ""}` : "Kiritilmagan"}
           onClick={() => setModal("account")}
         />
         <SetRow
@@ -315,8 +317,18 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
                   </select>
                 </div>
                 <div style={{ marginBottom: 14 }}>
-                  <label style={{ display: "block", fontSize: 11, color: "var(--text-2)", marginBottom: 6 }}>Asosiy juftlik</label>
-                  <input type="text" value={mainPair} onChange={(e) => setMainPair(e.target.value)} placeholder="XAUUSD" />
+                  <label style={{ display: "block", fontSize: 11, color: "var(--text-2)", marginBottom: 8 }}>Strategiya</label>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                    {STRATEGIES.map((s) => (
+                      <button key={s} type="button" onClick={() => setStrategy((p) => p.includes(s) ? p.filter((x) => x !== s) : [...p, s])} style={{
+                        padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: "pointer",
+                        border: `1px solid ${strategy.includes(s) ? "var(--teal)" : "var(--border)"}`,
+                        background: strategy.includes(s) ? "var(--teal-bg)" : "var(--surface2)",
+                        color: strategy.includes(s) ? "var(--teal)" : "var(--text-2)",
+                        transition: "all 0.15s",
+                      }}>{s}</button>
+                    ))}
+                  </div>
                 </div>
                 <button onClick={saveAccount} style={{ width: "100%", padding: 13, background: "var(--text)", color: "white", border: "none", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 500, cursor: "pointer", marginTop: 16 }}>Saqlash</button>
                 <button onClick={() => setModal(null)} style={{ width: "100%", padding: 11, background: "none", color: "var(--text-2)", border: "none", fontSize: 13, cursor: "pointer", marginTop: 6 }}>Bekor qilish</button>
@@ -371,7 +383,7 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
                   </div>
                 ))}
                 <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-                  <input value={newItem} onChange={(e) => setNewItem(e.target.value)} placeholder="Yangi qoida" onKeyDown={(e) => { if (e.key === "Enter" && newItem.trim()) { setChecklistItems((p) => [...p, newItem.trim()]); setNewItem(""); } }} />
+                  <input value={newItem} onChange={(e) => setNewItem(e.target.value)} placeholder="Yangi qoida" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (newItem.trim()) { setChecklistItems((p) => [...p, newItem.trim()]); setNewItem(""); } } }} />
                   <button onClick={() => { if (newItem.trim()) { setChecklistItems((p) => [...p, newItem.trim()]); setNewItem(""); } }} style={{ padding: "9px 14px", background: "var(--text)", color: "white", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 500, whiteSpace: "nowrap" }}>+</button>
                 </div>
                 <button onClick={saveChecklist} style={{ width: "100%", padding: 13, background: "var(--text)", color: "white", border: "none", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 500, cursor: "pointer", marginTop: 16 }}>Saqlash</button>
@@ -391,7 +403,7 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
                   ))}
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <input value={newItem} onChange={(e) => setNewItem(e.target.value)} placeholder="Yangi tag" onKeyDown={(e) => { if (e.key === "Enter" && newItem.trim()) { setConfluenceTags((p) => [...p, newItem.trim()]); setNewItem(""); } }} />
+                  <input value={newItem} onChange={(e) => setNewItem(e.target.value)} placeholder="Yangi tag" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (newItem.trim()) { setConfluenceTags((p) => [...p, newItem.trim()]); setNewItem(""); } } }} />
                   <button onClick={() => { if (newItem.trim()) { setConfluenceTags((p) => [...p, newItem.trim()]); setNewItem(""); } }} style={{ padding: "9px 14px", background: "var(--text)", color: "white", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 500, whiteSpace: "nowrap" }}>+</button>
                 </div>
                 <button onClick={saveConfluence} style={{ width: "100%", padding: 13, background: "var(--text)", color: "white", border: "none", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 500, cursor: "pointer", marginTop: 16 }}>Saqlash</button>

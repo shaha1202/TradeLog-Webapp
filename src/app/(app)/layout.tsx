@@ -12,15 +12,22 @@ export default async function AppLayout({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [profileResult, tradesResult] = await Promise.all([
+  // Only fetch profile and today's trades for sidebar (faster)
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const [profileResult, todayTradesResult] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", user.id).single(),
-    supabase.from("trades").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+    supabase.from("trades")
+      .select("id,pnl,result,rr,created_at")
+      .eq("user_id", user.id)
+      .gte("created_at", todayStart.toISOString()),
   ]);
   const { data: profile } = profileResult;
-  const { data: trades } = tradesResult;
+  const { data: todayTrades } = todayTradesResult;
 
   return (
-    <AppShell profile={profile as Profile | null} trades={(trades ?? []) as Trade[]}>
+    <AppShell profile={profile as Profile | null} trades={(todayTrades ?? []) as Trade[]}>
       {children}
     </AppShell>
   );

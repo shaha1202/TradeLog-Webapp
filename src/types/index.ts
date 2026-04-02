@@ -8,6 +8,7 @@ export interface Profile {
   default_risk: number;
   currency: string;
   main_pair: string | null;
+  strategy: string[] | null;
   feedback_enabled: boolean;
   created_at: string;
 }
