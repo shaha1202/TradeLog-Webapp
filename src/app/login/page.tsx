@@ -98,66 +98,69 @@ export default function LoginPage() {
             </button>
           </div>
         ) : (
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ display: "block", fontSize: 11, color: "var(--text-2)", marginBottom: 6 }}>
-              Email
-            </label>
-            <input
-              type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-              placeholder="trader@example.com" required
-            />
-          </div>
-          <div style={{ marginBottom: 24 }}>
-            <label style={{ display: "block", fontSize: 11, color: "var(--text-2)", marginBottom: 6 }}>
-              Parol
-            </label>
-            <input
-              type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••" required minLength={6}
-            />
-          </div>
+          <>
+            <form onSubmit={handleSubmit}>
+              <div style={{ marginBottom: 14 }}>
+                <label style={{ display: "block", fontSize: 11, color: "var(--text-2)", marginBottom: 6 }}>
+                  Email
+                </label>
+                <input
+                  type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                  placeholder="trader@example.com" required
+                />
+              </div>
+              <div style={{ marginBottom: 24 }}>
+                <label style={{ display: "block", fontSize: 11, color: "var(--text-2)", marginBottom: 6 }}>
+                  Parol
+                </label>
+                <input
+                  type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••" required minLength={6}
+                />
+              </div>
 
-          {error && (
-            <div style={{
-              background: "var(--red-bg)", border: "1px solid var(--red-br)", borderRadius: 8,
-              padding: "10px 14px", fontSize: 13, color: "var(--red)", marginBottom: 16,
-            }}>
-              {error}
-            </div>
-          )}
+              {error && (
+                <div style={{
+                  background: "var(--red-bg)", border: "1px solid var(--red-br)", borderRadius: 8,
+                  padding: "10px 14px", fontSize: 13, color: "var(--red)", marginBottom: 16,
+                }}>
+                  {error}
+                </div>
+              )}
 
-          <button
-            type="submit" disabled={loading}
-            style={{
-              width: "100%", padding: 14, background: "var(--text)", color: "white",
-              border: "none", borderRadius: 10, fontFamily: "'DM Sans',sans-serif",
-              fontSize: 14, fontWeight: 500, cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.6 : 1, transition: "all 0.2s",
-            }}
-          >
-            {loading ? (
-              <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                <span style={{
-                  width: 16, height: 16, border: "2px solid rgba(255,255,255,0.3)",
-                  borderTopColor: "white", borderRadius: "50%", display: "inline-block",
-                  animation: "spin 0.8s linear infinite",
-                }} />
-                {isSignUp ? "Yaratilmoqda..." : "Kirilmoqda..."}
-              </span>
-            ) : isSignUp ? "Hisob yaratish" : "Kirish"}
-          </button>
-        </form>
+              <button
+                type="submit" disabled={loading}
+                style={{
+                  width: "100%", padding: 14, background: "var(--text)", color: "white",
+                  border: "none", borderRadius: 10, fontFamily: "'DM Sans',sans-serif",
+                  fontSize: 14, fontWeight: 500, cursor: loading ? "not-allowed" : "pointer",
+                  opacity: loading ? 0.6 : 1, transition: "all 0.2s",
+                }}
+              >
+                {loading ? (
+                  <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                    <span style={{
+                      width: 16, height: 16, border: "2px solid rgba(255,255,255,0.3)",
+                      borderTopColor: "white", borderRadius: "50%", display: "inline-block",
+                      animation: "spin 0.8s linear infinite",
+                    }} />
+                    {isSignUp ? "Yaratilmoqda..." : "Kirilmoqda..."}
+                  </span>
+                ) : isSignUp ? "Hisob yaratish" : "Kirish"}
+              </button>
+            </form>
 
-        <p style={{ textAlign: "center", fontSize: 13, color: "var(--text-3)", marginTop: 20 }}>
-          {isSignUp ? "Hisobingiz bormi?" : "Hisob yo'qmi?"}{" "}
-          <button
-            onClick={() => { setIsSignUp(!isSignUp); setError(null); }}
-            style={{ background: "none", border: "none", color: "var(--teal)", cursor: "pointer", fontSize: 13, fontWeight: 500 }}
-          >
-            {isSignUp ? "Kirish" : "Ro'yxatdan o'tish"}
-          </button>
-        </p>
+            <p style={{ textAlign: "center", fontSize: 13, color: "var(--text-3)", marginTop: 20 }}>
+              {isSignUp ? "Hisobingiz bormi?" : "Hisob yo'qmi?"}{" "}
+              <button
+                onClick={() => { setIsSignUp(!isSignUp); setError(null); }}
+                style={{ background: "none", border: "none", color: "var(--teal)", cursor: "pointer", fontSize: 13, fontWeight: 500 }}
+              >
+                {isSignUp ? "Kirish" : "Ro'yxatdan o'tish"}
+              </button>
+            </p>
+          </>
+        )}
       </div>
     </div>
   );
