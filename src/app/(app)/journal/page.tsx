@@ -109,7 +109,7 @@ export default async function JournalPage() {
           </h1>
           <p className="text-[12px] md:text-[13px] text-text-3 mt-1.5">{dateStr}</p>
         </div>
-        <Link href="/journal/new" className="flex items-center gap-2 px-4 md:px-[18px] py-2.5 md:py-[10px] bg-text text-white border-none rounded-lg font-dm-sans text-[12px] md:text-[13px] font-medium no-underline transition-opacity hover:opacity-90 add-btn">
+        <Link href="/journal/new" className="flex items-center gap-2 px-4 md:px-[18px] py-2.5 md:py-[10px] bg-text text-bg border-none rounded-lg font-dm-sans text-[12px] md:text-[13px] font-medium no-underline transition-opacity hover:opacity-90 add-btn">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
             <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>

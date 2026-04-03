@@ -20,7 +20,7 @@ export default function Toast({ message, show, onHide }: ToastProps) {
     <div
       className={[
         "fixed bottom-8 left-1/2 -translate-x-1/2 z-[999]",
-        "bg-text text-white px-5 py-3 rounded-xl",
+        "bg-text text-bg px-5 py-3 rounded-xl",
         "text-sm font-medium whitespace-nowrap",
         "flex items-center gap-2.5",
         "shadow-[0_8px_32px_rgba(0,0,0,0.2)]",

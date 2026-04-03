@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 export function Navbar() {
   return (
@@ -36,6 +39,7 @@ export function Navbar() {
 
         {/* Actions */}
         <div className="flex items-center gap-2 sm:gap-3">
+          <LanguageSelector />
           <Link
             href="/login"
             className="hidden sm:block text-sm text-text-2 hover:text-text transition-colors font-dm-sans"

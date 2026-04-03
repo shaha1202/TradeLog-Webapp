@@ -610,7 +610,7 @@ export default function NewTradePage() {
             <button onClick={() => router.push("/journal")} className="px-3.5 md:px-3.5 py-2 md:py-2 bg-surface2 text-text-2 border border-border rounded-lg font-dm-sans text-[12px] md:text-[13px] cursor-pointer">
               Bekor qilish
             </button>
-            <button onClick={saveTrade} disabled={saving} className="px-5 md:px-8 py-2.5 md:py-3.5 bg-text text-white border-none rounded-lg font-dm-sans text-[13px] md:text-[14px] font-medium cursor-pointer transition-all disabled:not-allowed disabled:opacity-60" style={{ opacity: saving ? 0.6 : 1 }}>
+            <button onClick={saveTrade} disabled={saving} className="px-5 md:px-8 py-2.5 md:py-3.5 bg-text text-bg border-none rounded-lg font-dm-sans text-[13px] md:text-[14px] font-medium cursor-pointer transition-all disabled:not-allowed disabled:opacity-60" style={{ opacity: saving ? 0.6 : 1 }}>
               {saving ? "Saqlanmoqda..." : "Jurnalga saqlash →"}
             </button>
           </div>

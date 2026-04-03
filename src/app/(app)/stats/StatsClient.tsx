@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import type { Trade, Profile } from "@/types";
 import { formatPnl } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n";
 
 function filterByDays(trades: Trade[], days: number) {
   const cutoff = new Date();
@@ -44,6 +45,8 @@ function calcStats(trades: Trade[]) {
 }
 
 export default function StatsClient({ trades, profile }: { trades: Trade[]; profile: Profile | null }) {
+  const { t } = useLanguage();
+  const st = t.stats;
   const [period, setPeriod] = useState(7);
   const [aiInsight, setAiInsight] = useState<{ general: string; strengths: string[]; improvements: string[]; insight: string } | null>(null);
   const [loadingInsight, setLoadingInsight] = useState(false);
@@ -52,7 +55,7 @@ export default function StatsClient({ trades, profile }: { trades: Trade[]; prof
   const filtered = useMemo(() => filterByDays(trades, period), [trades, period]);
   const stats = useMemo(() => calcStats(filtered), [filtered]);
 
-  const periodLabel = period === 7 ? "Bu hafta" : period === 30 ? "Bu oy" : period === 90 ? "So'nggi 3 oy" : "Bu yil";
+  const periodLabel = period === 7 ? st.thisWeek : period === 30 ? st.thisMonth : period === 90 ? st.last3Mo : st.thisYear;
 
   useEffect(() => {
     setAiInsight(null);
@@ -106,7 +109,7 @@ export default function StatsClient({ trades, profile }: { trades: Trade[]; prof
       <div className="flex items-start justify-between mb-6 md:mb-8">
         <div>
           <h1 className="font-fraunces text-[26px] md:text-[32px] font-light leading-[1.1] tracking-[-0.5px] text-text">
-            Statistika
+            {st.title}
           </h1>
           <p className="text-[12px] md:text-[13px] text-text-3 mt-1.5">{periodLabel}</p>
         </div>
@@ -115,14 +118,14 @@ export default function StatsClient({ trades, profile }: { trades: Trade[]; prof
       {/* Period tabs */}
       <div className="flex gap-1.5 md:gap-2 mb-5 overflow-x-auto pb-1">
         {[
-          { label: "Hafta", days: 7 },
-          { label: "Oy", days: 30 },
-          { label: "3 oy", days: 90 },
-          { label: "Yil", days: 365 },
+          { label: st.week, days: 7 },
+          { label: st.month, days: 30 },
+          { label: st.threeMonths, days: 90 },
+          { label: st.year, days: 365 },
         ].map(({ label, days }) => (
           <button key={days} onClick={() => setPeriod(days)} className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-[11px] md:text-[12px] font-medium cursor-pointer transition-all whitespace-nowrap ${
             period === days
-              ? "bg-text text-white border-text"
+              ? "bg-text text-bg border-text"
               : "bg-surface text-text-2 border-border"
           } border`}>
             {label}
@@ -141,7 +144,7 @@ export default function StatsClient({ trades, profile }: { trades: Trade[]; prof
             </div>
             <div>
               <div className="text-[12px] md:text-[13px] font-medium text-text">AI Coach</div>
-              <div className="text-[10px] md:text-[11px] text-text-3 mt-0.5">{periodLabel} statistikasi asosida</div>
+              <div className="text-[10px] md:text-[11px] text-text-3 mt-0.5">{st.aiInsight}</div>
             </div>
           </div>
           {!insightLoaded && filtered.length > 0 && (
@@ -156,14 +159,14 @@ export default function StatsClient({ trades, profile }: { trades: Trade[]; prof
               {loadingInsight ? (
                 <>
                   <span className="w-3 h-3 md:w-3.5 md:h-3.5 border-2 border-border border-t-teal rounded-full inline-block animate-spin-custom" />
-                  Tahlil qilinmoqda...
+                  {st.analyzing}
                 </>
               ) : (
                 <>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                     <path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17H8v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                  AI Tavsiya olish
+                  {st.getInsight}
                 </>
               )}
             </button>
@@ -172,12 +175,12 @@ export default function StatsClient({ trades, profile }: { trades: Trade[]; prof
             <button
               onClick={() => { setAiInsight(null); setInsightLoaded(false); }}
               className="px-2.5 md:px-3 py-1.5 md:py-2 bg-surface2 text-text-3 border border-border rounded-lg text-[10px] md:text-[11px] cursor-pointer">
-              Yangilash
+              ↺
             </button>
           )}
         </div>
         {filtered.length === 0 ? (
-          <div className="text-[12px] md:text-[13px] text-text-3 mt-3">Bu davrda tradelar yo&apos;q.</div>
+          <div className="text-[12px] md:text-[13px] text-text-3 mt-3">{st.noTrades}</div>
         ) : insightLoaded && aiInsight ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 md:gap-2.5 mt-1">
             {/* General */}
