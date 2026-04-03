@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { AIAnalysisResult, Profile } from "@/types";
 import Toast from "@/components/Toast";
+import { useLanguage } from "@/lib/i18n";
 
 const DEFAULT_CONFLUENCE = [
   "FVG", "Order Block", "Liquidity Sweep", "Break of Structure",
@@ -26,6 +27,8 @@ const SESSIONS = ["Asian", "London", "New York", "London + NY"];
 
 export default function NewTradePage() {
   const router = useRouter();
+  const { t, lang } = useLanguage();
+  const nt = t.newTrade;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [today, setToday] = useState("");
@@ -210,6 +213,7 @@ export default function NewTradePage() {
           mimeType: file.type,
           balance: profile?.account_balance,
           risk: profile?.default_risk,
+          lang,
         }),
       });
 
@@ -227,14 +231,17 @@ export default function NewTradePage() {
         if (data.narrative) { setNarrative(data.narrative); newAiFields.add("narrative"); }
         if (data.feedback) { setFeedback(data.feedback); newAiFields.add("feedback"); }
         setAiFields(newAiFields);
+      } else {
+        setToast({ show: true, message: nt.analyzeError });
       }
     } catch (err) {
       console.error("AI analysis failed:", err);
+      setToast({ show: true, message: nt.analyzeError });
     } finally {
       setScanning(false);
       setFormVisible(true);
     }
-  }, [profile]);
+  }, [profile, lang]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -244,14 +251,14 @@ export default function NewTradePage() {
   }, [handleFile]);
 
   async function saveTrade() {
-    if (!asset) { setToast({ show: true, message: "Asset nomini kiriting" }); return; }
+    if (!asset) { setToast({ show: true, message: nt.assetRequired }); return; }
     setSaving(true);
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.push("/login"); return; }
 
     if (profile?.plan === "free" && tradeCount >= 30) {
-      setToast({ show: true, message: "Free tarif: 30 ta trade limiti. Pro-ga o'ting!" });
+      setToast({ show: true, message: nt.freeLimitReached });
       setSaving(false);
       return;
     }
@@ -284,7 +291,7 @@ export default function NewTradePage() {
 
     setSaving(false);
     if (error) {
-      setToast({ show: true, message: "Xato yuz berdi: " + error.message });
+      setToast({ show: true, message: nt.saveError + error.message });
     } else {
       if (profile?.account_balance && pnl) {
         const pnlVal = parseFloat(pnl);
@@ -308,10 +315,10 @@ export default function NewTradePage() {
       <div className="flex items-start justify-between mb-6 md:mb-8">
         <div>
           <h1 className="font-fraunces text-[24px] md:text-[32px] font-light leading-[1.1] tracking-[-0.5px] text-text">
-            Yangi trade<br />qo&apos;shish
+            {nt.title}
           </h1>
           <p className="text-[12px] md:text-[13px] text-text-3 mt-1.5">
-            Screenshot yuklang — AI qolganini o&apos;zi to&apos;ldiradi
+            {nt.subtitle}
           </p>
         </div>
         <div className="font-dm-mono text-[11px] md:text-[12px] text-text-3">
@@ -338,7 +345,7 @@ export default function NewTradePage() {
                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               <span className="text-white text-[12px] font-dm-mono tracking-[0.05em]">
-                Rasmni almashtirish
+                {nt.changeImage}
               </span>
             </div>
           </>
@@ -350,10 +357,10 @@ export default function NewTradePage() {
               </svg>
             </div>
             <div className="text-[14px] md:text-[15px] font-medium mb-1.5 text-text">
-              Entry screenshotni yuklang
+              {nt.uploadTitle}
             </div>
             <div className="text-[12px] md:text-[13px] text-text-3">
-              TradingView, MT4, MT5 — PNG yoki JPG
+              {nt.uploadSub}
             </div>
           </>
         )}
@@ -366,12 +373,12 @@ export default function NewTradePage() {
       {/* Scanning */}
       {scanning && (
         <div className="py-8 md:py-8 px-5 md:px-7 text-center">
-          <div className="text-[12px] md:text-[13px] text-text-2 mb-1">AI chart ni o&apos;qiyabdi...</div>
+          <div className="text-[12px] md:text-[13px] text-text-2 mb-1">{nt.scanning}</div>
           <div className="w-full h-3 bg-surface2 rounded-md overflow-hidden my-4">
             <div className="h-full bg-teal rounded-md w-[35%] animate-scan" />
           </div>
           <div className="font-dm-mono text-[11px] md:text-[12px] text-text-2 animate-blink">
-            Asset va narxlarni aniqlamoqda
+            {nt.scanningDetail}
           </div>
         </div>
       )}
@@ -383,10 +390,10 @@ export default function NewTradePage() {
           <div className="bg-surface border border-border rounded-2xl p-5 md:p-6 lg:p-[24px_28px] mb-4 shadow-[var(--shadow)]">
             <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-text-3 mb-4 md:mb-5 flex items-center gap-2">
               <div className="w-5 h-5 bg-surface2 rounded-full flex items-center justify-center text-[10px] text-text-2 font-dm-mono">1</div>
-              Trade ma&apos;lumotlari
+              {nt.section1}
               <div className="flex items-center gap-1.5 bg-teal-bg text-teal text-[10px] font-dm-mono px-2 py-0.5 rounded-md border border-teal-br">
                 <div className="w-1.5 h-1.5 bg-teal rounded-full animate-pulse" />
-                AI to&apos;ldirdi
+                {nt.aiFilled}
               </div>
             </div>
 
@@ -410,7 +417,7 @@ export default function NewTradePage() {
                 </select>
               </div>
               <div className="flex flex-col gap-1.5 md:gap-2">
-                <label className="text-[11px] text-text-2">Yo&apos;nalish</label>
+                <label className="text-[11px] text-text-2">{nt.direction}</label>
                 <div className="flex gap-2">
                   {(["LONG", "SHORT"] as const).map((d) => (
                     <button key={d} onClick={() => setDirection(direction === d ? null : d)} className={`flex-1 py-2 md:py-[9px] px-3 md:px-3 rounded-lg font-dm-mono text-[11px] md:text-[12px] font-medium cursor-pointer transition-all border ${
@@ -451,10 +458,10 @@ export default function NewTradePage() {
           <div className="bg-surface border border-border rounded-2xl p-5 md:p-6 lg:p-[24px_28px] mb-4 shadow-[var(--shadow)]">
             <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-text-3 mb-4 md:mb-5 flex items-center gap-2">
               <div className="w-5 h-5 bg-surface2 rounded-full flex items-center justify-center text-[10px] text-text-2 font-dm-mono">2</div>
-              Risk &amp; Natija
+              {nt.section2}
               <div className="flex items-center gap-1.5 bg-teal-bg text-teal text-[10px] font-dm-mono px-2 py-0.5 rounded-md border border-teal-br">
                 <div className="w-1.5 h-1.5 bg-teal rounded-full animate-pulse" />
-                Hisob sozlamalaridan
+                {nt.fromSettings}
               </div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-[14px] mb-3.5 md:mb-[14px]">
@@ -471,7 +478,7 @@ export default function NewTradePage() {
               ))}
             </div>
             <div className="flex flex-col gap-1.5 md:gap-2">
-              <label className="text-[11px] text-text-2">Natija</label>
+              <label className="text-[11px] text-text-2">{nt.result}</label>
               <div className="flex gap-2">
                 {([
                   { key: "win", label: "✓ Win", on: { bg: "var(--green-bg)", border: "var(--green-br)", color: "var(--green)" } },
@@ -494,10 +501,10 @@ export default function NewTradePage() {
           <div className="bg-surface border border-border rounded-2xl p-5 md:p-6 lg:p-[24px_28px] mb-4 shadow-[var(--shadow)]">
             <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-text-3 mb-4 md:mb-5 flex items-center gap-2">
               <div className="w-5 h-5 bg-surface2 rounded-full flex items-center justify-center text-[10px] text-text-2 font-dm-mono">3</div>
-              AI tahlili
+              {nt.section3}
               <div className="flex items-center gap-1.5 bg-teal-bg text-teal text-[10px] font-dm-mono px-2 py-0.5 rounded-md border border-teal-br">
                 <div className="w-1.5 h-1.5 bg-teal rounded-full animate-pulse" />
-                Chuqur tahlil
+                {nt.deepAnalysis}
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-[14px] mb-3.5 md:mb-[14px]">
@@ -506,14 +513,14 @@ export default function NewTradePage() {
                 <input type="text" value={htfTrend} onChange={(e) => setHtfTrend(e.target.value)} placeholder="Bearish · H4" className={aiFields.has("htfTrend") ? "ai-auto" : ""} />
               </div>
               <div className="flex flex-col gap-1.5 md:gap-2">
-                <label className="text-[11px] text-text-2">Chart tahlili</label>
+                <label className="text-[11px] text-text-2">{nt.chartAnalysis}</label>
                 <div className="bg-teal-bg border border-teal-br border-l-[3px] border-teal rounded-r-lg py-2 md:py-3 px-3 md:px-4 text-[12px] md:text-[13px] leading-[1.7] text-text min-h-[52px] md:min-h-[56px]">
                   {narrative || "—"}
                 </div>
               </div>
             </div>
             <div className="flex flex-col gap-1.5 md:gap-2 mb-3.5 md:mb-[14px]">
-              <label className="text-[11px] text-text-2">Confluence</label>
+              <label className="text-[11px] text-text-2">{nt.confluence}</label>
               <div className="flex flex-wrap gap-1.5 mt-1.5">
                 {confluenceTags.map((tag) => (
                   <button key={tag} onClick={() => setSelectedConfluence((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag])} className={`py-1 md:py-[5px] px-3 md:px-3 rounded-lg text-[11px] md:text-[12px] cursor-pointer transition-all select-none border ${
@@ -545,7 +552,7 @@ export default function NewTradePage() {
             <div className="bg-surface border border-border rounded-2xl p-5 md:p-[24px_28px] shadow-[var(--shadow)]">
               <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-text-3 mb-4 md:mb-5 flex items-center gap-2">
                 <div className="w-5 h-5 bg-surface2 rounded-full flex items-center justify-center text-[10px] text-text-2 font-dm-mono">4</div>
-                Pre-trade checklist
+                {nt.section4}
               </div>
               <div className="flex flex-col gap-2.5">
                 {checklistItems.map((item) => (
@@ -569,10 +576,10 @@ export default function NewTradePage() {
             <div className="bg-surface border border-border rounded-2xl p-5 md:p-[24px_28px] shadow-[var(--shadow)]">
               <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-text-3 mb-4 md:mb-5 flex items-center gap-2">
                 <div className="w-5 h-5 bg-surface2 rounded-full flex items-center justify-center text-[10px] text-text-2 font-dm-mono">5</div>
-                Psixologiya
+                {nt.section5}
               </div>
               <div className="flex flex-col gap-1.5 md:gap-2 mb-3.5 md:mb-[14px]">
-                <label className="text-[11px] text-text-2">Kayfiyat</label>
+                <label className="text-[11px] text-text-2">{nt.mood}</label>
                 <div className="flex flex-wrap gap-1.5">
                   {MOODS.map((mood) => (
                     <button key={mood} onClick={() => setMoods((prev) => prev.includes(mood) ? prev.filter((m) => m !== mood) : [...prev, mood])} className={`py-1 md:py-[5px] px-3 md:px-3 rounded-lg text-[11px] md:text-[12px] cursor-pointer transition-all select-none border ${
@@ -586,7 +593,7 @@ export default function NewTradePage() {
                 </div>
               </div>
               <div className="flex flex-col gap-1.5 md:gap-2 mb-3.5 md:mb-[14px]">
-                <label className="text-[11px] text-text-2">Rejaga amal qilish</label>
+                <label className="text-[11px] text-text-2">{nt.planScore}</label>
                 <div className="flex gap-1 cursor-pointer">
                   {[1, 2, 3, 4, 5].map((n) => (
                     <span key={n} onClick={() => setStars(stars === n ? 0 : n)} className="text-[18px] md:text-[20px] transition-colors cursor-pointer" style={{ color: n <= stars ? "#f59e0b" : "var(--border-dark)" }}>
@@ -596,22 +603,22 @@ export default function NewTradePage() {
                 </div>
               </div>
               <div className="flex flex-col gap-1.5 md:gap-2 mb-3.5 md:mb-[14px]">
-                <label className="text-[11px] text-text-2">Yaxshi qilganim</label>
-                <textarea value={wentWell} onChange={(e) => setWentWell(e.target.value)} placeholder="Nima to'g'ri ketdi?" className="h-14 md:min-h-[72px]" />
+                <label className="text-[11px] text-text-2">{nt.wentWell}</label>
+                <textarea value={wentWell} onChange={(e) => setWentWell(e.target.value)} placeholder={nt.wentWellPlaceholder} className="h-14 md:min-h-[72px]" />
               </div>
               <div className="flex flex-col gap-1.5 md:gap-2">
-                <label className="text-[11px] text-text-2">Yaxshilash kerak</label>
-                <textarea value={improve} onChange={(e) => setImprove(e.target.value)} placeholder="Nima o'zgartirish kerak?" className="h-14 md:min-h-[72px]" />
+                <label className="text-[11px] text-text-2">{nt.improve}</label>
+                <textarea value={improve} onChange={(e) => setImprove(e.target.value)} placeholder={nt.improvePlaceholder} className="h-14 md:min-h-[72px]" />
               </div>
             </div>
           </div>
 
           <div className="flex justify-end gap-3 mb-12">
             <button onClick={() => router.push("/journal")} className="px-3.5 md:px-3.5 py-2 md:py-2 bg-surface2 text-text-2 border border-border rounded-lg font-dm-sans text-[12px] md:text-[13px] cursor-pointer">
-              Bekor qilish
+              {nt.cancel}
             </button>
-            <button onClick={saveTrade} disabled={saving} className="px-5 md:px-8 py-2.5 md:py-3.5 bg-text text-white border-none rounded-lg font-dm-sans text-[13px] md:text-[14px] font-medium cursor-pointer transition-all disabled:not-allowed disabled:opacity-60" style={{ opacity: saving ? 0.6 : 1 }}>
-              {saving ? "Saqlanmoqda..." : "Jurnalga saqlash →"}
+            <button onClick={saveTrade} disabled={saving} className="px-5 md:px-8 py-2.5 md:py-3.5 bg-text text-bg border-none rounded-lg font-dm-sans text-[13px] md:text-[14px] font-medium cursor-pointer transition-all disabled:not-allowed disabled:opacity-60" style={{ opacity: saving ? 0.6 : 1 }}>
+              {saving ? nt.saving : nt.save}
             </button>
           </div>
         </div>

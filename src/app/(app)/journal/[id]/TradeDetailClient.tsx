@@ -1,17 +1,53 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Trade, Profile } from "@/types";
 import { formatPnl, formatDate, formatTime } from "@/lib/utils";
 import Toast from "@/components/Toast";
+import { useLanguage } from "@/lib/i18n";
 
 export default function TradeDetailClient({ trade, profile }: { trade: Trade; profile: Profile | null }) {
   const router = useRouter();
+  const { t, lang } = useLanguage();
+  const d = t.tradeDetail;
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [toast, setToast] = useState({ show: false, message: "" });
+  const [translatedNarrative, setTranslatedNarrative] = useState<string | null>(null);
+  const [translatedFeedback, setTranslatedFeedback] = useState<string | null>(null);
+  const translateCacheRef = useRef<Record<string, { narrative?: string; feedback?: string }>>({});
+
+  useEffect(() => {
+    if (lang === "uz") { setTranslatedNarrative(null); setTranslatedFeedback(null); return; }
+    const cached = translateCacheRef.current[lang];
+    if (cached) { setTranslatedNarrative(cached.narrative ?? null); setTranslatedFeedback(cached.feedback ?? null); return; }
+
+    const texts: string[] = [];
+    if (trade.ai_narrative) texts.push(trade.ai_narrative);
+    if (trade.ai_feedback) texts.push(trade.ai_feedback);
+    if (texts.length === 0) return;
+
+    fetch("/api/translate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ texts, lang }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.translations) {
+          let i = 0;
+          const entry: { narrative?: string; feedback?: string } = {};
+          if (trade.ai_narrative) entry.narrative = data.translations[i++];
+          if (trade.ai_feedback) entry.feedback = data.translations[i++];
+          translateCacheRef.current[lang] = entry;
+          setTranslatedNarrative(entry.narrative ?? null);
+          setTranslatedFeedback(entry.feedback ?? null);
+        }
+      })
+      .catch(() => {});
+  }, [lang, trade.ai_narrative, trade.ai_feedback]);
 
   const pnlColor = trade.pnl === null ? "var(--text)" : trade.pnl > 0 ? "var(--green)" : trade.pnl < 0 ? "var(--red)" : "var(--text-2)";
   const dirStyle = trade.direction === "LONG"
@@ -49,19 +85,19 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
             <path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          Orqaga
+          {d.back}
         </button>
         <button onClick={() => router.push(`/journal/${trade.id}/edit`)} className="flex items-center gap-1.5 px-3 md:px-[14px] py-2 md:py-[8px] bg-surface2 text-text-2 border border-border rounded-lg font-dm-sans text-[12px] md:text-[13px] cursor-pointer">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
             <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          Tahrirlash
+          {d.edit}
         </button>
         <button onClick={() => setShowDeleteModal(true)} className="flex items-center gap-1.5 px-3 md:px-[14px] py-2 md:py-[8px] bg-red-bg text-red border border-red-br rounded-lg font-dm-sans text-[12px] md:text-[13px] cursor-pointer">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
             <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          O&apos;chirish
+          {d.delete}
         </button>
       </div>
 
@@ -94,14 +130,14 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
         {/* AI Analysis */}
         <div className="bg-surface border border-border rounded-2xl p-4 md:p-6 shadow-[var(--shadow)]">
           <div className="text-[10px] font-medium tracking-[0.12em] uppercase text-text-3 mb-4 flex items-center gap-2">
-            AI tahlili
+            {d.aiAnalysis}
             <span className="inline-flex items-center gap-1.5 bg-teal-bg text-teal text-[10px] font-dm-mono py-0.5 px-2 rounded-md border border-teal-br">
               <span className="w-1.5 h-1.5 bg-teal rounded-full inline-block animate-pulse" />
-              Chuqur tahlil
+              {d.deepAnalysis}
             </span>
           </div>
           <div className="bg-teal-bg border border-teal-br border-l-[3px] border-teal rounded-r-lg py-2 md:py-3 px-3 md:px-4 text-[12px] md:text-[13px] leading-[1.7] text-text mb-3">
-            {trade.ai_narrative || "—"}
+            {translatedNarrative ?? trade.ai_narrative ?? "—"}
           </div>
           {profile?.feedback_enabled && trade.ai_feedback && (
             <div className="bg-amber-bg border border-amber-br border-l-[3px] border-amber rounded-r-lg py-2 md:py-3 px-3 md:px-4 text-[12px] md:text-[13px] leading-[1.7] text-text">
@@ -111,7 +147,7 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
                 </svg>
                 AI Feedback
               </div>
-              {trade.ai_feedback}
+              {translatedFeedback ?? trade.ai_feedback}
             </div>
           )}
         </div>
@@ -119,7 +155,7 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
         {/* Trade info */}
         <div className="bg-surface border border-border rounded-2xl p-4 md:p-6 shadow-[var(--shadow)]">
           <div className="text-[10px] font-medium tracking-[0.12em] uppercase text-text-3 mb-4">
-            Trade ma&apos;lumotlari
+            {d.tradeInfo}
           </div>
           {[
             { label: "Entry", value: trade.entry ?? "—" },
@@ -152,13 +188,13 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
       {/* Psychology & Confluence */}
       <div className="bg-surface border border-border rounded-2xl p-4 md:p-6 shadow-[var(--shadow)] mb-4">
         <div className="text-[10px] font-medium tracking-[0.12em] uppercase text-text-3 mb-4">
-          Psixologiya &amp; Confluence
+          {d.psychConfluence}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           <div>
             {trade.mood && trade.mood.length > 0 && (
               <div className="mb-3">
-                <div className="text-[11px] text-text-3 mb-1.5">Kayfiyat</div>
+                <div className="text-[11px] text-text-3 mb-1.5">{d.mood}</div>
                 <div className="flex flex-wrap gap-1.5">
                   {trade.mood.map((m) => (
                     <span key={m} className="py-1 md:py-[5px] px-2.5 md:px-3 rounded-lg text-[11px] md:text-[12px] bg-amber-bg text-amber border border-amber-br">
@@ -170,7 +206,7 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
             )}
             {trade.plan_adherence !== null && (
               <div className="mb-3">
-                <div className="text-[11px] text-text-3 mb-1.5">Rejaga amal qilish</div>
+                <div className="text-[11px] text-text-3 mb-1.5">{d.planScore}</div>
                 <div className="flex gap-1">
                   {[1, 2, 3, 4, 5].map((n) => (
                     <span key={n} className="text-[16px] md:text-[18px]" style={{ color: n <= (trade.plan_adherence ?? 0) ? "#f59e0b" : "var(--border-dark)" }}>★</span>
@@ -180,13 +216,13 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
             )}
             {trade.went_well && (
               <div className="mb-3">
-                <div className="text-[11px] text-text-3 mb-1">Yaxshi qilganim</div>
+                <div className="text-[11px] text-text-3 mb-1">{d.wentWell}</div>
                 <p className="text-[12px] md:text-[13px] text-text leading-[1.6]">{trade.went_well}</p>
               </div>
             )}
             {trade.improve && (
               <div>
-                <div className="text-[11px] text-text-3 mb-1">Yaxshilash kerak</div>
+                <div className="text-[11px] text-text-3 mb-1">{d.improve}</div>
                 <p className="text-[12px] md:text-[13px] text-text leading-[1.6]">{trade.improve}</p>
               </div>
             )}
@@ -234,16 +270,16 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
         <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)] backdrop-blur-sm z-50 flex items-center justify-center p-4 md:p-6">
           <div className="bg-surface border border-border rounded-2xl p-5 md:p-7 w-full max-w-[440px] shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
             <div className="font-fraunces text-[17px] md:text-[20px] font-light mb-3 text-text">
-              Tradeni o&apos;chirish
+              {d.deleteTitle}
             </div>
             <p className="text-[12px] md:text-[13px] text-text-2 leading-[1.6] mb-6">
-              <strong>{trade.asset}</strong> tradeni o&apos;chirmoqchimisiz? Bu amalni qaytarib bo&apos;lmaydi.
+              <strong>{trade.asset}</strong> {d.deleteConfirmText}
             </p>
             <button onClick={deleteTrade} disabled={deleting} className="w-full py-3 md:py-3 bg-red text-white border-none rounded-lg font-dm-sans text-[13px] md:text-[14px] font-medium cursor-pointer disabled:not-allowed disabled:opacity-60 mb-2" style={{ opacity: deleting ? 0.6 : 1 }}>
-              {deleting ? "O'chirilmoqda..." : "Ha, o'chirish"}
+              {deleting ? d.deleting : d.deleteConfirm}
             </button>
             <button onClick={() => setShowDeleteModal(false)} className="w-full py-2.5 md:py-3 bg-none text-text-2 border-none text-[12px] md:text-[13px] cursor-pointer">
-              Bekor qilish
+              {d.cancel}
             </button>
           </div>
         </div>

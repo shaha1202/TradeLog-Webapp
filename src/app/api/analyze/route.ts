@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   try {
-    const { image, mimeType, balance, risk } = await req.json();
+    const { image, mimeType, balance, risk, lang } = await req.json();
 
     if (!image) {
       return NextResponse.json({ error: "No image provided" }, { status: 400 });
     }
+
+    const LANG_NAMES: Record<string, string> = { en: "English", ru: "Russian", uz: "Uzbek" };
+    const langName = LANG_NAMES[lang ?? "uz"] ?? "Uzbek";
 
     const prompt = `Analyze this TradingView chart screenshot.
 
@@ -30,8 +35,8 @@ Respond ONLY in JSON:
   "sl": number_or_null,
   "tp": number_or_null,
   "trend": "HTF trend description",
-  "narrative": "3-4 sentences in Uzbek: chart structure, key zones, setup description",
-  "feedback": "2-3 sentences in Uzbek: setup strengths, weaknesses, recommendation (or null if disabled)"
+  "narrative": "3-4 sentences in ${langName}: chart structure, key zones, setup description",
+  "feedback": "2-3 sentences in ${langName}: setup strengths, weaknesses, recommendation (or null if disabled)"
 }`;
 
     const response = await anthropic.messages.create({

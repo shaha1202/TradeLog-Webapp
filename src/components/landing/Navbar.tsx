@@ -1,6 +1,13 @@
+"use client";
+
 import Link from "next/link";
+import { LanguageSelector } from "@/components/LanguageSelector";
+import { useLanguage } from "@/lib/i18n";
 
 export function Navbar() {
+  const { t } = useLanguage();
+  const l = t.landing;
+
   return (
     <nav className="sticky top-0 z-50 bg-bg border-b border-border">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
@@ -18,35 +25,36 @@ export function Navbar() {
             href="#features"
             className="text-sm text-text-2 hover:text-text transition-colors font-dm-sans"
           >
-            Features
+            {l.features}
           </a>
           <a
             href="#pricing"
             className="text-sm text-text-2 hover:text-text transition-colors font-dm-sans"
           >
-            Pricing
+            {l.pricing}
           </a>
           <a
             href="#story"
             className="text-sm text-text-2 hover:text-text transition-colors font-dm-sans"
           >
-            About
+            {l.about}
           </a>
         </div>
 
         {/* Actions */}
         <div className="flex items-center gap-2 sm:gap-3">
+          <LanguageSelector />
           <Link
             href="/login"
             className="hidden sm:block text-sm text-text-2 hover:text-text transition-colors font-dm-sans"
           >
-            Sign in
+            {l.signIn}
           </Link>
           <Link
             href="/login"
             className="text-sm font-medium bg-teal text-white px-3 sm:px-4 py-1.5 rounded-lg hover:opacity-90 transition-opacity font-dm-sans whitespace-nowrap"
           >
-            Start free
+            {l.startFree}
           </Link>
         </div>
       </div>

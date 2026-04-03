@@ -1,6 +1,8 @@
+"use client";
 import Link from "next/link";
 import { MockTradeCard } from "./MockTradeCard";
 import { MockStatsBlock } from "./MockStatsBlock";
+import { useLanguage } from "@/lib/i18n";
 
 const MOCK_TRADES = [
   {
@@ -35,6 +37,9 @@ const MOCK_TRADES = [
 const MOCK_STATS = { pnl: 286.5, winRate: 67, count: 3, avgRR: 2.27 };
 
 export function Hero() {
+  const { t } = useLanguage();
+  const l = t.landing;
+
   return (
     <section className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-20 md:pt-20 md:pb-24">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
@@ -43,20 +48,18 @@ export function Hero() {
           <div className="inline-flex items-center gap-2 bg-teal-bg border border-teal-br rounded-full px-3 py-1 mb-5">
             <div className="w-1.5 h-1.5 rounded-full bg-teal" />
             <span className="text-xs font-dm-mono text-teal">
-              Save 70–80% of journaling time
+              {l.badge}
             </span>
           </div>
 
           <h1 className="font-fraunces font-light text-3xl md:text-4xl lg:text-5xl text-text leading-tight mb-4 md:mb-5">
-            Journaling was slow.
+            {l.headline1}
             <br />
-            <span className="text-teal">Now it takes seconds.</span>
+            <span className="text-teal">{l.headline2}</span>
           </h1>
 
           <p className="text-sm md:text-base text-text-2 font-dm-sans leading-relaxed mb-6 md:mb-8 max-w-md">
-            TradeLog makes it fast to log trades, see your performance clearly,
-            and build the discipline that separates consistent traders from the
-            rest.
+            {l.sub}
           </p>
 
           <div className="flex items-center gap-3 flex-wrap">
@@ -64,7 +67,7 @@ export function Hero() {
               href="/login"
               className="inline-flex items-center gap-2 bg-teal text-white font-dm-sans font-medium text-sm px-5 py-2.5 rounded-lg hover:opacity-90 transition-opacity"
             >
-              Start journaling free
+              {l.cta1}
               <svg
                 width="14"
                 height="14"
@@ -85,7 +88,7 @@ export function Hero() {
               href="#preview"
               className="inline-flex items-center gap-2 bg-surface border border-border text-text font-dm-sans font-medium text-sm px-5 py-2.5 rounded-lg hover:border-border-dark transition-colors"
             >
-              See how it works
+              {l.cta2}
             </a>
           </div>
 
@@ -95,7 +98,7 @@ export function Hero() {
                 70%
               </div>
               <div className="text-xs text-text-3 font-dm-sans">
-                less time spent
+                {l.stat1}
               </div>
             </div>
             <div className="w-px h-8 bg-border" />
@@ -104,7 +107,7 @@ export function Hero() {
                 100%
               </div>
               <div className="text-xs text-text-3 font-dm-sans">
-                free to start
+                {l.stat2}
               </div>
             </div>
             <div className="w-px h-8 bg-border" />
@@ -113,7 +116,7 @@ export function Hero() {
                 AI
               </div>
               <div className="text-xs text-text-3 font-dm-sans">
-                chart analysis
+                {l.stat3}
               </div>
             </div>
           </div>
@@ -139,7 +142,7 @@ export function Hero() {
 
             {/* Date label */}
             <div className="flex items-center justify-between mb-2 px-1">
-              <span className="text-xs font-dm-sans text-text-3">Today</span>
+              <span className="text-xs font-dm-sans text-text-3">{l.todayLabel}</span>
               <span className="text-xs font-dm-mono text-text-3">
                 3 trades
               </span>
@@ -176,7 +179,7 @@ export function Hero() {
               <div className="text-xs font-dm-mono font-medium text-green">
                 +$286.50
               </div>
-              <div className="text-xs text-text-3 font-dm-sans">Today</div>
+              <div className="text-xs text-text-3 font-dm-sans">{l.todayLabel}</div>
             </div>
           </div>
         </div>

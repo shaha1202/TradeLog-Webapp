@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   try {
     const stats = await req.json();
+
+    const LANG_NAMES: Record<string, string> = { en: "English", ru: "Russian", uz: "Uzbek" };
+    const langName = LANG_NAMES[stats.lang ?? "uz"] ?? "Uzbek";
 
     const prompt = `You are a professional trading coach. Analyze these trading statistics and respond ONLY with a JSON object.
 
@@ -16,7 +21,7 @@ Stats (${stats.days} days):
 - Assets: ${stats.assetSummary}
 - Avg plan adherence: ${stats.avgAdherence}/5
 
-Respond ONLY with this JSON (all text in Uzbek):
+Respond ONLY with this JSON (all text in ${langName}):
 {
   "general": "2-3 sentence overall assessment of the trader's performance",
   "strengths": ["strength 1", "strength 2"],
