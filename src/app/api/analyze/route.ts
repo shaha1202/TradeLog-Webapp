@@ -71,6 +71,6 @@ Respond ONLY in JSON:
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     console.error("Analyze error:", msg);
-    return NextResponse.json({ error: "Analysis failed", detail: msg }, { status: 500 });
+    return NextResponse.json({ error: "Analysis failed" }, { status: 500 });
   }
 }
