@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { LanguageContext, type Language, translations as T } from "@/lib/i18n";
+import { LanguageContext, type Language, type Translations, translations as T } from "@/lib/i18n";
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<Language>("uz");

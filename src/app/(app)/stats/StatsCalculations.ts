@@ -159,9 +159,9 @@ export function calcConfluencePerformance(trades: Trade[]) {
 // --- Checklist Performance ---
 
 export function calcChecklistPerformance(trades: Trade[]) {
-  const allItems = new Set<string>();
+  const allItems: string[] = [];
   trades.forEach((t) => {
-    if (t.checklist) Object.keys(t.checklist).forEach((k) => allItems.add(k));
+    if (t.checklist) Object.keys(t.checklist).forEach((k) => { if (!allItems.includes(k)) allItems.push(k); });
   });
 
   const results: {

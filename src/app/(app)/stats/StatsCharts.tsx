@@ -171,7 +171,8 @@ export function ConfluenceChart({ data }: ConfluenceChartProps) {
             boxShadow: "var(--shadow)",
           }}
           labelStyle={{ color: "var(--text-3)", fontSize: "10px" }}
-          formatter={(value: number) => [`${value}%`, "Win Rate"]}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          formatter={(value: any) => [`${value}%`, "Win Rate"]}
         />
         <Bar dataKey="winRate" radius={[0, 4, 4, 0]} maxBarSize={20}>
           {data.map((entry, i) => (
