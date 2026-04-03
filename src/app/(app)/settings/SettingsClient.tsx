@@ -29,21 +29,17 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
 
   const STRATEGIES = ["ICT", "SMC", "Classic", "Algo", "Wyckoff", "Price Action", "Supply & Demand", "VSA"];
 
-  // Account form
   const [balance, setBalance] = useState(String(profile?.account_balance ?? ""));
   const [riskPct, setRiskPct] = useState(String(profile?.default_risk ?? 1));
   const [currency, setCurrency] = useState(profile?.currency ?? "USD");
   const [strategy, setStrategy] = useState<string[]>(profile?.strategy ?? []);
 
-  // Profile form
   const [fullName, setFullName] = useState(profile?.full_name ?? "");
 
-  // Toggle states
   const [feedbackEnabled, setFeedbackEnabled] = useState(profile?.feedback_enabled ?? true);
   const [dailyReminder, setDailyReminder] = useState(false);
   const [riskWarning, setRiskWarning] = useState(true);
 
-  // Custom lists
   const [checklistItems, setChecklistItems] = useState<string[]>(DEFAULT_CHECKLIST);
   const [confluenceTags, setConfluenceTags] = useState<string[]>(DEFAULT_CONFLUENCE);
   const [newItem, setNewItem] = useState("");
@@ -69,6 +65,7 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
       setProfile((p) => p ? { ...p, account_balance: parseFloat(balance), default_risk: parseFloat(riskPct), currency, strategy } : p);
       setModal(null);
       showToast("Hisob sozlamalari saqlandi");
+      fetch("/api/profile/revalidate", { method: "POST" });
     }
   }
 
@@ -79,6 +76,7 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
       setProfile((p) => p ? { ...p, full_name: fullName } : p);
       setModal(null);
       showToast("Profil yangilandi");
+      fetch("/api/profile/revalidate", { method: "POST" });
     }
   }
 
@@ -126,16 +124,10 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
   }
 
   const Toggle = ({ on, onToggle }: { on: boolean; onToggle: () => void }) => (
-    <div onClick={onToggle} style={{
-      width: 40, height: 22, background: on ? "var(--green)" : "var(--surface3)",
-      borderRadius: 11, position: "relative", cursor: "pointer", transition: "background 0.2s",
-      flexShrink: 0, border: `1px solid ${on ? "var(--green)" : "var(--border)"}`,
-    }}>
-      <div style={{
-        position: "absolute", top: 2, left: on ? 20 : 2,
-        width: 16, height: 16, background: "white", borderRadius: "50%",
-        transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-      }} />
+    <div onClick={onToggle} className={`w-10 h-6 rounded-full relative cursor-pointer transition-colors flex-shrink-0 border ${
+      on ? "bg-green border-green" : "bg-surface3 border-border"
+    }`}>
+      <div className={`absolute top-1 ${on ? "left-5" : "left-1"} w-4 h-4 bg-white rounded-full transition-all shadow-[0_1px_3px_rgba(0,0,0,0.2)]`} />
     </div>
   );
 
@@ -143,53 +135,48 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
     icon: React.ReactNode; iconBg: string; iconColor: string;
     name: string; sub?: string; onClick?: () => void; right?: React.ReactNode;
   }) => (
-    <div onClick={onClick} style={{
-      display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px",
-      borderBottom: "1px solid var(--border)", cursor: onClick ? "pointer" : "default", transition: "background 0.15s",
-    }} className={onClick ? "hover:bg-[var(--surface2)]" : ""}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ width: 32, height: 32, borderRadius: 8, background: iconBg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ color: iconColor }}>
+    <div onClick={onClick} className={`flex items-center justify-between py-3 md:py-[14px] px-4 md:px-5 border-b border-border last:border-b-0 cursor-pointer transition-colors ${onClick ? "hover:bg-surface2" : ""}`}>
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 md:w-8 md:h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: iconBg }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ color: iconColor }}>
             {icon}
           </svg>
         </div>
         <div>
-          <div style={{ fontSize: 13, color: name.includes("tozalash") || name.includes("Chiqish") ? "var(--red)" : "var(--text)" }}>{name}</div>
-          {sub && <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>{sub}</div>}
+          <div className={`text-[12px] md:text-[13px] ${name.includes("tozalash") || name.includes("Chiqish") ? "text-red" : "text-text"}`}>{name}</div>
+          {sub && <div className="text-[10px] md:text-[11px] text-text-3 mt-0.5">{sub}</div>}
         </div>
       </div>
-      {right ?? (onClick ? <span style={{ color: "var(--text-3)", fontSize: 16 }}>›</span> : null)}
+      {right ?? (onClick ? <span className="text-text-3 text-[14px] md:text-[16px]">›</span> : null)}
     </div>
   );
 
   return (
     <div>
-      <div style={{ marginBottom: 32 }}>
-        <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 32, fontWeight: 300, lineHeight: 1.1, letterSpacing: "-0.5px", color: "var(--text)" }}>
+      <div className="mb-6 md:mb-8">
+        <h1 className="font-fraunces text-[26px] md:text-[32px] font-light leading-[1.1] tracking-[-0.5px] text-text">
           Sozlamalar
         </h1>
       </div>
 
       {/* Plan card */}
-      <div style={{ background: "var(--teal-bg)", border: "1px solid var(--teal-br)", borderRadius: 12, padding: "20px 24px", marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div className="bg-teal-bg border border-teal-br rounded-xl md:rounded-lg p-4 md:p-5 mb-5 flex items-center justify-between">
         <div>
-          <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 18, fontWeight: 300, color: "var(--text)" }}>
+          <h3 className="font-fraunces text-[15px] md:text-[18px] font-light text-text">
             {profile?.plan === "free" ? "Free tarif" : "Pro tarif"}
           </h3>
-          <p style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>
+          <p className="text-[11px] md:text-[12px] text-text-2 mt-1">
             {profile?.plan === "free" ? "AI tahlil · Jurnal · 30 trade/oy" : "Cheksiz trade · Barcha xususiyatlar"}
           </p>
         </div>
-        <div style={{ background: "var(--teal)", color: "white", fontSize: 11, fontWeight: 500, padding: "4px 12px", borderRadius: 5, fontFamily: "'DM Mono',monospace" }}>
+        <div className="bg-teal text-white text-[10px] md:text-[11px] font-medium py-1 px-2.5 md:px-3 rounded-md font-dm-mono">
           Faol
         </div>
       </div>
 
       {/* Account section */}
-      <div style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 8, marginTop: 20, padding: "0 2px" }}>
-        Hisob
-      </div>
-      <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, marginBottom: 16, overflow: "hidden", boxShadow: "var(--shadow)" }}>
+      <div className="text-[10px] font-medium tracking-[0.12em] uppercase text-text-3 mb-2 mt-4 px-1">Hisob</div>
+      <div className="bg-surface border border-border rounded-xl md:rounded-lg mb-4 overflow-hidden shadow-[var(--shadow)]">
         <SetRow
           icon={<rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />}
           iconBg="var(--green-bg)" iconColor="var(--green)"
@@ -204,7 +191,7 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
           sub={profile?.full_name || "Trader"}
           onClick={() => setModal("profile")}
         />
-        <div style={{ borderBottom: "none" }}>
+        <div className="border-b-0">
           <SetRow
             icon={<><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></>}
             iconBg="var(--amber-bg)" iconColor="var(--amber)"
@@ -216,10 +203,8 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
       </div>
 
       {/* Customize */}
-      <div style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 8, marginTop: 20, padding: "0 2px" }}>
-        Sozlash
-      </div>
-      <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, marginBottom: 16, overflow: "hidden", boxShadow: "var(--shadow)" }}>
+      <div className="text-[10px] font-medium tracking-[0.12em] uppercase text-text-3 mb-2 mt-4 px-1">Sozlash</div>
+      <div className="bg-surface border border-border rounded-xl md:rounded-lg mb-4 overflow-hidden shadow-[var(--shadow)]">
         <SetRow
           icon={<><path d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></>}
           iconBg="var(--green-bg)" iconColor="var(--green)"
@@ -227,9 +212,9 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
           sub="Qoidalarni tahrirlash"
           onClick={() => setModal("checklist")}
         />
-        <div style={{ borderBottom: "none" }}>
+        <div className="border-b-0">
           <SetRow
-            icon={<><circle cx="12" cy="12" r="2" stroke="currentColor" strokeWidth="1.5" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M16.95 7.05l2.12-2.12M4.93 19.07l2.12-2.12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></>}
+            icon={<><circle cx="12" cy="12" r="2" stroke="currentColor" strokeWidth="1.5" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M16.95 7.05l2.12-2.12M4.93 19.07l2.12-2.12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></>}
             iconBg="var(--purple-bg)" iconColor="var(--purple)"
             name="Confluence taglar"
             sub="Taglarni o'zgartirish"
@@ -239,10 +224,8 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
       </div>
 
       {/* AI & Notifications */}
-      <div style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 8, marginTop: 20, padding: "0 2px" }}>
-        AI & Bildirishnomalar
-      </div>
-      <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, marginBottom: 16, overflow: "hidden", boxShadow: "var(--shadow)" }}>
+      <div className="text-[10px] font-medium tracking-[0.12em] uppercase text-text-3 mb-2 mt-4 px-1">AI & Bildirishnomalar</div>
+      <div className="bg-surface border border-border rounded-xl md:rounded-lg mb-4 overflow-hidden shadow-[var(--shadow)]">
         <SetRow
           icon={<><path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17H8v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></>}
           iconBg="var(--teal-bg)" iconColor="var(--teal)"
@@ -257,7 +240,7 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
           sub="Har kuni 09:00"
           right={<Toggle on={dailyReminder} onToggle={() => setDailyReminder(!dailyReminder)} />}
         />
-        <div style={{ borderBottom: "none" }}>
+        <div className="border-b-0">
           <SetRow
             icon={<><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0zM12 9v4M12 17h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></>}
             iconBg="var(--red-bg)" iconColor="var(--red)"
@@ -269,16 +252,16 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
       </div>
 
       {/* Danger zone */}
-      <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, marginBottom: 16, overflow: "hidden", boxShadow: "var(--shadow)" }}>
+      <div className="bg-surface border border-border rounded-xl md:rounded-lg mb-4 overflow-hidden shadow-[var(--shadow)]">
         <SetRow
           icon={<><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></>}
           iconBg="var(--red-bg)" iconColor="var(--red)"
           name="Ma'lumotlarni tozalash"
           onClick={() => setModal("clear")}
         />
-        <div style={{ borderBottom: "none" }}>
+        <div className="border-b-0">
           <SetRow
-            icon={<><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></>}
+            icon={<><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5M21 12H9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></>}
             iconBg="var(--red-bg)" iconColor="var(--red)"
             name="Chiqish"
             onClick={handleLogout}
@@ -288,139 +271,131 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
 
       {/* MODALS */}
       {modal && (
-        <div style={{
-          position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
-          zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
-        }} onClick={(e) => { if (e.target === e.currentTarget) setModal(null); }}>
-          <div style={{
-            background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16, padding: 28,
-            width: "100%", maxWidth: 440, maxHeight: "80vh", overflowY: "auto",
-            boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
-          }}>
+        <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)] backdrop-blur-sm z-50 flex items-center justify-center p-4 md:p-6" onClick={(e) => { if (e.target === e.currentTarget) setModal(null); }}>
+          <div className="bg-surface border border-border rounded-2xl p-5 md:p-7 w-full max-w-[440px] max-h-[80vh] overflow-y-auto shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
 
             {modal === "account" && (
               <>
-                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 300, marginBottom: 20, color: "var(--text)" }}>Hisob sozlamalari</div>
+                <div className="font-fraunces text-[17px] md:text-[20px] font-light mb-5 text-text">Hisob sozlamalari</div>
                 {[
                   { label: "Hisob hajmi ($)", value: balance, set: setBalance, placeholder: "10000", step: "100" },
                   { label: "Default risk (%)", value: riskPct, set: setRiskPct, placeholder: "1.0", step: "0.1" },
                 ].map(({ label, value, set, placeholder, step }) => (
-                  <div key={label} style={{ marginBottom: 14 }}>
-                    <label style={{ display: "block", fontSize: 11, color: "var(--text-2)", marginBottom: 6 }}>{label}</label>
+                  <div key={label} className="mb-3.5">
+                    <label className="block text-[11px] text-text-2 mb-1.5">{label}</label>
                     <input type="number" value={value} onChange={(e) => set(e.target.value)} placeholder={placeholder} step={step} />
                   </div>
                 ))}
-                <div style={{ marginBottom: 14 }}>
-                  <label style={{ display: "block", fontSize: 11, color: "var(--text-2)", marginBottom: 6 }}>Valyuta</label>
+                <div className="mb-3.5">
+                  <label className="block text-[11px] text-text-2 mb-1.5">Valyuta</label>
                   <select value={currency} onChange={(e) => setCurrency(e.target.value)}>
                     {["USD", "EUR", "GBP", "UZS"].map((c) => <option key={c}>{c}</option>)}
                   </select>
                 </div>
-                <div style={{ marginBottom: 14 }}>
-                  <label style={{ display: "block", fontSize: 11, color: "var(--text-2)", marginBottom: 8 }}>Strategiya</label>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                <div className="mb-3.5">
+                  <label className="block text-[11px] text-text-2 mb-2">Strategiya</label>
+                  <div className="flex flex-wrap gap-1.5">
                     {STRATEGIES.map((s) => (
-                      <button key={s} type="button" onClick={() => setStrategy((p) => p.includes(s) ? p.filter((x) => x !== s) : [...p, s])} style={{
-                        padding: "6px 12px", borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: "pointer",
-                        border: `1px solid ${strategy.includes(s) ? "var(--teal)" : "var(--border)"}`,
-                        background: strategy.includes(s) ? "var(--teal-bg)" : "var(--surface2)",
-                        color: strategy.includes(s) ? "var(--teal)" : "var(--text-2)",
-                        transition: "all 0.15s",
-                      }}>{s}</button>
+                      <button key={s} type="button" onClick={() => setStrategy((p) => p.includes(s) ? p.filter((x) => x !== s) : [...p, s])} className={`py-1.5 md:py-[6px] px-2.5 md:px-3 rounded-lg text-[11px] md:text-[12px] font-medium cursor-pointer transition-all border ${
+                        strategy.includes(s)
+                          ? "border-teal bg-teal-bg text-teal"
+                          : "border-border bg-surface2 text-text-2"
+                      }`}>
+                        {s}
+                      </button>
                     ))}
                   </div>
                 </div>
-                <button onClick={saveAccount} style={{ width: "100%", padding: 13, background: "var(--text)", color: "white", border: "none", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 500, cursor: "pointer", marginTop: 16 }}>Saqlash</button>
-                <button onClick={() => setModal(null)} style={{ width: "100%", padding: 11, background: "none", color: "var(--text-2)", border: "none", fontSize: 13, cursor: "pointer", marginTop: 6 }}>Bekor qilish</button>
+                <button onClick={saveAccount} className="w-full py-3 bg-text text-white border-none rounded-lg font-dm-sans text-[13px] md:text-[14px] font-medium cursor-pointer mt-4">Saqlash</button>
+                <button onClick={() => setModal(null)} className="w-full py-2.5 bg-none text-text-2 border-none text-[12px] md:text-[13px] cursor-pointer mt-2">Bekor qilish</button>
               </>
             )}
 
             {modal === "profile" && (
               <>
-                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 300, marginBottom: 20, color: "var(--text)" }}>Profil</div>
-                <div style={{ marginBottom: 14 }}>
-                  <label style={{ display: "block", fontSize: 11, color: "var(--text-2)", marginBottom: 6 }}>Ism</label>
+                <div className="font-fraunces text-[17px] md:text-[20px] font-light mb-5 text-text">Profil</div>
+                <div className="mb-3.5">
+                  <label className="block text-[11px] text-text-2 mb-1.5">Ism</label>
                   <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="To'liq ism" />
                 </div>
-                <div style={{ marginBottom: 14 }}>
-                  <label style={{ display: "block", fontSize: 11, color: "var(--text-2)", marginBottom: 6 }}>Email</label>
-                  <input type="email" value={profile?.email ?? ""} readOnly style={{ opacity: 0.6, cursor: "default" }} />
+                <div className="mb-3.5">
+                  <label className="block text-[11px] text-text-2 mb-1.5">Email</label>
+                  <input type="email" value={profile?.email ?? ""} readOnly className="opacity-60 cursor-default" />
                 </div>
-                <button onClick={saveProfile} style={{ width: "100%", padding: 13, background: "var(--text)", color: "white", border: "none", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 500, cursor: "pointer", marginTop: 16 }}>Saqlash</button>
-                <button onClick={() => setModal(null)} style={{ width: "100%", padding: 11, background: "none", color: "var(--text-2)", border: "none", fontSize: 13, cursor: "pointer", marginTop: 6 }}>Bekor qilish</button>
+                <button onClick={saveProfile} className="w-full py-3 bg-text text-white border-none rounded-lg font-dm-sans text-[13px] md:text-[14px] font-medium cursor-pointer mt-4">Saqlash</button>
+                <button onClick={() => setModal(null)} className="w-full py-2.5 bg-none text-text-2 border-none text-[12px] md:text-[13px] cursor-pointer mt-2">Bekor qilish</button>
               </>
             )}
 
             {modal === "plan" && (
               <>
-                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 300, marginBottom: 20, color: "var(--text)" }}>Tarif tanlash</div>
+                <div className="font-fraunces text-[17px] md:text-[20px] font-light mb-5 text-text">Tarif tanlash</div>
                 {[
-                  { name: "Pro Oylik", price: "$9.90/oy", desc: "Cheksiz tradelar", key: "monthly" },
+                  { name: "Pro Oylik", price: "$9.9/oy", desc: "Cheksiz tradelar", key: "monthly" },
                   { name: "Pro Kvartal", price: "$24/3 oy", desc: "20% tejash · Cheksiz tradelar", key: "quarterly" },
                 ].map(({ name, price, desc, key }) => (
-                  <div key={key} style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 10, padding: "16px 18px", marginBottom: 10, cursor: "pointer", transition: "border-color 0.15s" }}
-                    onClick={() => handleStripeCheckout(
-                      key === "monthly"
-                        ? process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID ?? ""
-                        : process.env.NEXT_PUBLIC_STRIPE_QUARTERLY_PRICE_ID ?? ""
-                    )}>
-                    <div style={{ fontWeight: 500, fontSize: 14, color: "var(--text)" }}>{name}</div>
-                    <div style={{ fontSize: 13, color: "var(--teal)", fontFamily: "'DM Mono',monospace", marginTop: 4 }}>{price}</div>
-                    <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 2 }}>{desc}</div>
+                  <div key={key} className="bg-surface2 border border-border rounded-lg p-3 md:p-4 mb-2.5 cursor-pointer transition-colors" onClick={() => handleStripeCheckout(
+                    key === "monthly"
+                      ? process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID ?? ""
+                      : process.env.NEXT_PUBLIC_STRIPE_QUARTERLY_PRICE_ID ?? ""
+                  )}>
+                    <div className="font-medium text-[13px] md:text-[14px] text-text">{name}</div>
+                    <div className="text-[12px] md:text-[13px] text-teal font-dm-mono mt-1">{price}</div>
+                    <div className="text-[11px] md:text-[12px] text-text-3 mt-0.5">{desc}</div>
                   </div>
                 ))}
-                <button onClick={() => setModal(null)} style={{ width: "100%", padding: 11, background: "none", color: "var(--text-2)", border: "none", fontSize: 13, cursor: "pointer", marginTop: 6 }}>Bekor qilish</button>
+                <button onClick={() => setModal(null)} className="w-full py-2.5 bg-none text-text-2 border-none text-[12px] md:text-[13px] cursor-pointer mt-2">Bekor qilish</button>
               </>
             )}
 
             {modal === "checklist" && (
               <>
-                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 300, marginBottom: 20, color: "var(--text)" }}>Checklist qoidalari</div>
+                <div className="font-fraunces text-[17px] md:text-[20px] font-light mb-5 text-text">Checklist qoidalari</div>
                 {checklistItems.map((item, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
-                    <span style={{ fontSize: 13, color: "var(--text)" }}>{item}</span>
-                    <button onClick={() => setChecklistItems((prev) => prev.filter((_, idx) => idx !== i))} style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer", fontSize: 16, padding: "0 4px" }}>×</button>
+                  <div key={i} className="flex items-center justify-between py-2 px-0 border-b border-border">
+                    <span className="text-[12px] md:text-[13px] text-text">{item}</span>
+                    <button onClick={() => setChecklistItems((prev) => prev.filter((_, idx) => idx !== i))} className="bg-none border-none text-red cursor-pointer text-[14px] md:text-[16px] px-0 py-1">×</button>
                   </div>
                 ))}
-                <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+                <div className="flex gap-2 mt-3.5">
                   <input value={newItem} onChange={(e) => setNewItem(e.target.value)} placeholder="Yangi qoida" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (newItem.trim()) { setChecklistItems((p) => [...p, newItem.trim()]); setNewItem(""); } } }} />
-                  <button onClick={() => { if (newItem.trim()) { setChecklistItems((p) => [...p, newItem.trim()]); setNewItem(""); } }} style={{ padding: "9px 14px", background: "var(--text)", color: "white", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 500, whiteSpace: "nowrap" }}>+</button>
+                  <button onClick={() => { if (newItem.trim()) { setChecklistItems((p) => [...p, newItem.trim()]); setNewItem(""); } }} className="py-2 md:py-2.5 px-3.5 bg-text text-white border-none rounded-lg cursor-pointer font-medium text-[12px] md:text-[13px] whitespace-nowrap">+</button>
                 </div>
-                <button onClick={saveChecklist} style={{ width: "100%", padding: 13, background: "var(--text)", color: "white", border: "none", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 500, cursor: "pointer", marginTop: 16 }}>Saqlash</button>
-                <button onClick={() => setModal(null)} style={{ width: "100%", padding: 11, background: "none", color: "var(--text-2)", border: "none", fontSize: 13, cursor: "pointer", marginTop: 6 }}>Bekor qilish</button>
+                <button onClick={saveChecklist} className="w-full py-3 bg-text text-white border-none rounded-lg font-dm-sans text-[13px] md:text-[14px] font-medium cursor-pointer mt-4">Saqlash</button>
+                <button onClick={() => setModal(null)} className="w-full py-2.5 bg-none text-text-2 border-none text-[12px] md:text-[13px] cursor-pointer mt-2">Bekor qilish</button>
               </>
             )}
 
             {modal === "confluence" && (
               <>
-                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 300, marginBottom: 20, color: "var(--text)" }}>Confluence taglar</div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
+                <div className="font-fraunces text-[17px] md:text-[20px] font-light mb-5 text-text">Confluence taglar</div>
+                <div className="flex flex-wrap gap-1.5 mb-3.5">
                   {confluenceTags.map((tag, i) => (
-                    <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 10px", borderRadius: 6, background: "var(--purple-bg)", color: "var(--purple)", border: "1px solid var(--purple-br)", fontSize: 12 }}>
+                    <span key={i} className="inline-flex items-center gap-1.5 py-1 md:py-[5px] px-2.5 md:px-3 rounded-lg text-[11px] md:text-[12px] bg-purple-bg text-purple border border-purple-br">
                       {tag}
-                      <button onClick={() => setConfluenceTags((p) => p.filter((_, idx) => idx !== i))} style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer", fontSize: 14, padding: 0, lineHeight: 1 }}>×</button>
+                      <button onClick={() => setConfluenceTags((p) => p.filter((_, idx) => idx !== i))} className="bg-none border-none text-red cursor-pointer text-[12px] md:text-[14px] px-0 leading-[1]">×</button>
                     </span>
                   ))}
                 </div>
-                <div style={{ display: "flex", gap: 8 }}>
+                <div className="flex gap-2">
                   <input value={newItem} onChange={(e) => setNewItem(e.target.value)} placeholder="Yangi tag" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (newItem.trim()) { setConfluenceTags((p) => [...p, newItem.trim()]); setNewItem(""); } } }} />
-                  <button onClick={() => { if (newItem.trim()) { setConfluenceTags((p) => [...p, newItem.trim()]); setNewItem(""); } }} style={{ padding: "9px 14px", background: "var(--text)", color: "white", border: "none", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 500, whiteSpace: "nowrap" }}>+</button>
+                  <button onClick={() => { if (newItem.trim()) { setConfluenceTags((p) => [...p, newItem.trim()]); setNewItem(""); } }} className="py-2 md:py-2.5 px-3.5 bg-text text-white border-none rounded-lg cursor-pointer font-medium text-[12px] md:text-[13px] whitespace-nowrap">+</button>
                 </div>
-                <button onClick={saveConfluence} style={{ width: "100%", padding: 13, background: "var(--text)", color: "white", border: "none", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 500, cursor: "pointer", marginTop: 16 }}>Saqlash</button>
-                <button onClick={() => setModal(null)} style={{ width: "100%", padding: 11, background: "none", color: "var(--text-2)", border: "none", fontSize: 13, cursor: "pointer", marginTop: 6 }}>Bekor qilish</button>
+                <button onClick={saveConfluence} className="w-full py-3 bg-text text-white border-none rounded-lg font-dm-sans text-[13px] md:text-[14px] font-medium cursor-pointer mt-4">Saqlash</button>
+                <button onClick={() => setModal(null)} className="w-full py-2.5 bg-none text-text-2 border-none text-[12px] md:text-[13px] cursor-pointer mt-2">Bekor qilish</button>
               </>
             )}
 
             {modal === "clear" && (
               <>
-                <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 300, marginBottom: 12, color: "var(--text)" }}>Ma&apos;lumotlarni tozalash</div>
-                <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.6, marginBottom: 24 }}>
-                  Barcha tradelaringiz o&apos;chiriladi. Bu amalni qaytarib bo&apos;lmaydi.
+                <div className="font-fraunces text-[17px] md:text-[20px] font-light mb-3 text-text">Ma'lumotlarni tozalash</div>
+                <p className="text-[12px] md:text-[13px] text-text-2 leading-[1.6] mb-6">
+                  Barcha tradelaringiz o'chiriladi. Bu amalni qaytarib bo'lmaydi.
                 </p>
-                <button onClick={clearAllData} style={{ width: "100%", padding: 13, background: "var(--red)", color: "white", border: "none", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 500, cursor: "pointer", marginBottom: 8 }}>
-                  Ha, o&apos;chirish
+                <button onClick={clearAllData} className="w-full py-3 bg-red text-white border-none rounded-lg font-dm-sans text-[13px] md:text-[14px] font-medium cursor-pointer mb-2">
+                  Ha, o'chirish
                 </button>
-                <button onClick={() => setModal(null)} style={{ width: "100%", padding: 11, background: "none", color: "var(--text-2)", border: "none", fontSize: 13, cursor: "pointer" }}>Bekor qilish</button>
+                <button onClick={() => setModal(null)} className="w-full py-2.5 bg-none text-text-2 border-none text-[12px] md:text-[13px] cursor-pointer">Bekor qilish</button>
               </>
             )}
           </div>

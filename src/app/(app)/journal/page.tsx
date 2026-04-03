@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getUserId, getCachedProfile } from "@/lib/supabase/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import type { Trade, Profile } from "@/types";
@@ -6,12 +7,14 @@ import { formatPnl, formatDate, formatTime, groupTradesByDate } from "@/lib/util
 
 function StatCard({ label, value, sub, colorClass }: { label: string; value: string; sub?: string; colorClass?: string }) {
   return (
-    <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: "16px 18px", boxShadow: "var(--shadow)" }}>
-      <div style={{ fontSize: 11, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 500, fontFamily: "'DM Mono',monospace", letterSpacing: "-0.5px", color: colorClass === "g" ? "var(--green)" : colorClass === "r" ? "var(--red)" : "var(--text)" }}>
+    <div className="bg-surface border border-border rounded-xl p-4 md:p-[18px] shadow-[var(--shadow)]">
+      <div className="text-[10px] md:text-[11px] text-text-3 uppercase tracking-[0.08em] mb-2">{label}</div>
+      <div className={`text-[18px] md:text-[22px] font-medium font-dm-mono tracking-[-0.5px] ${
+        colorClass === "g" ? "text-green" : colorClass === "r" ? "text-red" : "text-text"
+      }`}>
         {value}
       </div>
-      {sub && <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 3 }}>{sub}</div>}
+      {sub && <div className="text-[10px] md:text-[11px] text-text-3 mt-1">{sub}</div>}
     </div>
   );
 }
@@ -27,48 +30,43 @@ function TradeCard({ trade, feedbackEnabled }: { trade: Trade; feedbackEnabled: 
 
   return (
     <Link href={`/journal/${trade.id}`} style={{ textDecoration: "none" }}>
-      <div style={{
-        background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12,
-        padding: "16px 20px", cursor: "pointer", boxShadow: "var(--shadow)", transition: "all 0.15s",
-      }}
-        className="hover:shadow-[var(--shadow-hover)] hover:border-[var(--border-dark)]"
-      >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-          <span style={{ fontSize: 15, fontWeight: 500, letterSpacing: "-0.2px", color: "var(--text)" }}>
+      <div className="bg-surface border border-border rounded-xl p-4 md:p-5 shadow-[var(--shadow)] transition-all duration-150 hover:shadow-[var(--shadow-hover)] hover:border-[var(--border-dark)]">
+        <div className="flex items-center justify-between mb-2.5">
+          <span className="text-[14px] md:text-[15px] font-medium tracking-[-0.2px] text-text">
             {trade.asset || "—"}
           </span>
-          <span style={{ fontSize: 15, fontWeight: 500, fontFamily: "'DM Mono',monospace", color: pnlColor }}>
+          <span className="text-[14px] md:text-[15px] font-medium font-dm-mono" style={{ color: pnlColor }}>
             {trade.pnl !== null ? formatPnl(trade.pnl) : "—"}
           </span>
         </div>
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 8 }}>
+        <div className="flex gap-1.5 flex-wrap mb-2">
           {trade.direction && (
-            <span style={{ fontSize: 10, fontWeight: 500, padding: "2px 8px", borderRadius: 5, fontFamily: "'DM Mono',monospace", background: dirColor.bg, color: dirColor.color }}>
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-md font-dm-mono" style={{ background: dirColor.bg, color: dirColor.color }}>
               {trade.direction}
             </span>
           )}
           {trade.result && (
-            <span style={{ fontSize: 10, fontWeight: 500, padding: "2px 8px", borderRadius: 5, fontFamily: "'DM Mono',monospace", background: resStyle.bg, color: resStyle.color }}>
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-md font-dm-mono" style={{ background: resStyle.bg, color: resStyle.color }}>
               {trade.result === "win" ? "WIN" : trade.result === "loss" ? "LOSS" : "BE"}
             </span>
           )}
           {trade.timeframe && (
-            <span style={{ fontSize: 10, fontWeight: 500, padding: "2px 8px", borderRadius: 5, fontFamily: "'DM Mono',monospace", background: "var(--surface2)", color: "var(--text-2)", border: "1px solid var(--border)" }}>
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-md font-dm-mono bg-surface2 text-text-2 border border-border">
               {trade.timeframe}
             </span>
           )}
           {trade.rr !== null && (
-            <span style={{ fontSize: 10, fontWeight: 500, padding: "2px 8px", borderRadius: 5, fontFamily: "'DM Mono',monospace", background: "var(--surface2)", color: trade.rr >= 2 ? "var(--green)" : trade.rr >= 1 ? "var(--amber)" : "var(--red)", border: "1px solid var(--border)" }}>
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-md font-dm-mono bg-surface2 border border-border" style={{ color: trade.rr >= 2 ? "var(--green)" : trade.rr >= 1 ? "var(--amber)" : "var(--red)" }}>
               {trade.rr.toFixed(2)}R
             </span>
           )}
         </div>
         {feedbackEnabled && trade.ai_feedback && (
-          <div style={{ fontSize: 12, color: "var(--text-2)", lineHeight: 1.55, padding: "8px 12px", background: "var(--teal-bg)", borderRadius: 6, borderLeft: "2px solid var(--teal)", marginTop: 8 }}>
+          <div className="text-[11px] md:text-[12px] text-text-2 leading-[1.55] p-2 md:p-3 bg-teal-bg rounded-lg border-l-2 border-teal mt-2">
             {trade.ai_feedback.slice(0, 120)}{trade.ai_feedback.length > 120 ? "..." : ""}
           </div>
         )}
-        <div style={{ fontSize: 11, color: "var(--text-3)", fontFamily: "'DM Mono',monospace", marginTop: 8 }}>
+        <div className="text-[10px] md:text-[11px] text-text-3 font-dm-mono mt-2">
           {formatTime(trade.created_at)}
         </div>
       </div>
@@ -77,17 +75,16 @@ function TradeCard({ trade, feedbackEnabled }: { trade: Trade; feedbackEnabled: 
 }
 
 export default async function JournalPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const userId = await getUserId();
+  if (!userId) redirect("/login");
 
-  const [{ data: tradesData }, { data: profileData }] = await Promise.all([
-    supabase.from("trades").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
-    supabase.from("profiles").select("*").eq("id", user.id).single(),
+  const supabase = await createClient();
+  const [tradesData, profile] = await Promise.all([
+    supabase.from("trades").select("*").eq("user_id", userId).order("created_at", { ascending: false }).then(r => r.data),
+    getCachedProfile(userId),
   ]);
 
   const trades = (tradesData ?? []) as Trade[];
-  const profile = profileData as Profile | null;
 
   // Today stats
   const today = new Date().toDateString();
@@ -105,30 +102,23 @@ export default async function JournalPage() {
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 32 }}>
+      <div className="flex items-start justify-between mb-6 md:mb-8">
         <div>
-          <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 32, fontWeight: 300, lineHeight: 1.1, letterSpacing: "-0.5px", color: "var(--text)" }}>
+          <h1 className="font-fraunces text-[26px] md:text-[32px] font-light leading-[1.1] tracking-[-0.5px] text-text">
             Jurnal
           </h1>
-          <p style={{ fontSize: 13, color: "var(--text-3)", marginTop: 6 }}>{dateStr}</p>
+          <p className="text-[12px] md:text-[13px] text-text-3 mt-1.5">{dateStr}</p>
         </div>
-        <Link href="/journal/new" style={{
-          display: "flex", alignItems: "center", gap: 8, padding: "10px 18px",
-          background: "var(--text)", color: "white", border: "none", borderRadius: 8,
-          fontFamily: "'DM Sans',sans-serif", fontSize: 13, fontWeight: 500,
-          cursor: "pointer", textDecoration: "none", transition: "opacity 0.2s",
-        }}
-          className="add-btn"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <Link href="/journal/new" className="flex items-center gap-2 px-4 md:px-[18px] py-2.5 md:py-[10px] bg-text text-white border-none rounded-lg font-dm-sans text-[12px] md:text-[13px] font-medium no-underline transition-opacity hover:opacity-90 add-btn">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
             <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
           Yangi trade
         </Link>
       </div>
 
-      {/* Stats grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 28 }}>
+      {/* Stats grid - responsive: 2 cols on mobile, 4 on desktop */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-3 mb-6 md:mb-7">
         <StatCard label="Bugungi P&L" value={todayTrades.length > 0 ? formatPnl(totalPnl, profile?.currency) : "—"} colorClass={totalPnl > 0 ? "g" : totalPnl < 0 ? "r" : ""} />
         <StatCard label="Win rate" value={winRate !== null ? `${winRate}%` : "—"} />
         <StatCard label="Tradelar" value={String(todayTrades.length > 0 ? todayTrades.length : "—")} />
@@ -137,27 +127,27 @@ export default async function JournalPage() {
 
       {/* Trades list */}
       {trades.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "80px 40px" }}>
-          <div style={{ width: 48, height: 48, margin: "0 auto 20px", opacity: 0.2 }}>
+        <div className="text-center py-16 md:py-20 px-6 md:px-10">
+          <div className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-5 opacity-20">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <h3 style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 300, color: "var(--text)", marginBottom: 8 }}>
+          <h3 className="font-fraunces text-[18px] md:text-[20px] font-light text-text mb-2">
             Hali trade yo&apos;q
           </h3>
-          <p style={{ fontSize: 13, color: "var(--text-3)" }}>
+          <p className="text-[12px] md:text-[13px] text-text-3">
             Birinchi tradeingizni qo&apos;shish uchun yuqoridagi tugmani bosing
           </p>
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+        <div className="flex flex-col gap-5 md:gap-6">
           {dateKeys.map((dateKey) => (
             <div key={dateKey}>
-              <div style={{ fontSize: 11, fontWeight: 500, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>
+              <div className="text-[10px] md:text-[11px] font-medium text-text-3 uppercase tracking-[0.1em] mb-2.5">
                 {dateKey}
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div className="flex flex-col gap-2">
                 {(grouped[dateKey] as Trade[]).map((trade) => (
                   <TradeCard key={trade.id} trade={trade} feedbackEnabled={profile?.feedback_enabled ?? true} />
                 ))}

@@ -114,7 +114,6 @@ export default function NewTradePage() {
       ]);
       if (p) {
         setProfile(p as Profile);
-        // Only set risk defaults if no session draft exists
         const draft = sessionStorage.getItem(DRAFT_KEY);
         const hasDraft = draft && JSON.parse(draft).asset;
         if (!hasDraft) {
@@ -123,7 +122,6 @@ export default function NewTradePage() {
             setRiskDollar(((p.account_balance * p.default_risk) / 100).toFixed(2));
           }
         }
-        // Load custom checklist/confluence from settings
         const saved = localStorage.getItem("custom_checklist");
         const savedConf = localStorage.getItem("custom_confluence");
         if (saved) setChecklistItems(JSON.parse(saved));
@@ -134,10 +132,9 @@ export default function NewTradePage() {
     loadProfile();
   }, []);
 
-  // Init checklist
   useEffect(() => {
     const initial: Record<string, boolean> = {};
-    checklistItems.forEach((item, i) => { initial[i] = i < 5; });
+    checklistItems.forEach((item) => { initial[item] = true; });
     setChecklist(initial);
   }, [checklistItems]);
 
@@ -165,7 +162,6 @@ export default function NewTradePage() {
 
   useEffect(() => { calcRiskDollar(); }, [calcRiskDollar]);
 
-  // Auto-calculate P&L from result + riskDollar + rr
   useEffect(() => {
     const rd = parseFloat(riskDollar);
     if (isNaN(rd) || rd <= 0) return;
@@ -178,7 +174,6 @@ export default function NewTradePage() {
     }
   }, [result, riskDollar, rr]);
 
-  // Persist form to sessionStorage (survives navigation within session)
   useEffect(() => {
     try {
       sessionStorage.setItem(DRAFT_KEY, JSON.stringify({
@@ -195,7 +190,6 @@ export default function NewTradePage() {
     reader.onload = (e) => setImagePreview(e.target?.result as string);
     reader.readAsDataURL(file);
 
-    // Start AI analysis
     setScanning(true);
     setFormVisible(false);
     try {
@@ -256,7 +250,6 @@ export default function NewTradePage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.push("/login"); return; }
 
-    // Check free plan limit
     if (profile?.plan === "free" && tradeCount >= 30) {
       setToast({ show: true, message: "Free tarif: 30 ta trade limiti. Pro-ga o'ting!" });
       setSaving(false);
@@ -293,7 +286,6 @@ export default function NewTradePage() {
     if (error) {
       setToast({ show: true, message: "Xato yuz berdi: " + error.message });
     } else {
-      // Auto-update account balance with trade P&L
       if (profile?.account_balance && pnl) {
         const pnlVal = parseFloat(pnl);
         if (!isNaN(pnlVal) && pnlVal !== 0) {
@@ -303,9 +295,9 @@ export default function NewTradePage() {
           }).eq("id", user.id);
         }
       }
-      // Clear session draft
       sessionStorage.removeItem(DRAFT_KEY);
-      window.location.href = "/journal";
+      router.push("/journal");
+      router.refresh();
     }
   }
 
@@ -313,16 +305,16 @@ export default function NewTradePage() {
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 32 }}>
+      <div className="flex items-start justify-between mb-6 md:mb-8">
         <div>
-          <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 32, fontWeight: 300, lineHeight: 1.1, letterSpacing: "-0.5px", color: "var(--text)" }}>
+          <h1 className="font-fraunces text-[24px] md:text-[32px] font-light leading-[1.1] tracking-[-0.5px] text-text">
             Yangi trade<br />qo&apos;shish
           </h1>
-          <p style={{ fontSize: 13, color: "var(--text-3)", marginTop: 6 }}>
+          <p className="text-[12px] md:text-[13px] text-text-3 mt-1.5">
             Screenshot yuklang — AI qolganini o&apos;zi to&apos;ldiradi
           </p>
         </div>
-        <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, color: "var(--text-3)" }}>
+        <div className="font-dm-mono text-[11px] md:text-[12px] text-text-3">
           #{tradeCount + 1} · {today}
         </div>
       </div>
@@ -333,64 +325,52 @@ export default function NewTradePage() {
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
-        style={{
-          border: `1.5px ${imagePreview ? "solid" : "dashed"} ${isDragging ? "var(--teal)" : imagePreview ? "var(--border)" : "var(--border-dark)"}`,
-          borderRadius: 16, padding: imagePreview ? 0 : "64px 32px",
-          textAlign: "center", cursor: imagePreview ? "default" : "pointer",
-          transition: "all 0.2s", background: isDragging ? "var(--teal-bg)" : "var(--surface)",
-          position: "relative", overflow: "hidden", marginBottom: 16,
-        }}
+        className={`border-[1.5px] ${imagePreview ? "solid" : "dashed"} ${isDragging ? "border-teal" : imagePreview ? "border-border" : "border-border-dark"} rounded-2xl ${imagePreview ? "p-0" : "py-12 md:py-16 px-4 md:px-8"} text-center cursor-${imagePreview ? "default" : "pointer"} transition-all ${isDragging ? "bg-teal-bg" : "bg-surface"} relative overflow-hidden mb-4`}
       >
         {imagePreview ? (
           <>
-            <img src={imagePreview} alt="Chart" style={{ width: "100%", borderRadius: 14, display: "block" }} />
+            <img src={imagePreview} alt="Chart" className="w-full rounded-xl" />
             <div
               onClick={() => fileInputRef.current?.click()}
-              style={{
-                position: "absolute", inset: 0, background: "rgba(26,24,20,0.7)",
-                display: "flex", flexDirection: "column", alignItems: "center",
-                justifyContent: "center", gap: 8, opacity: 0, transition: "opacity 0.2s",
-                borderRadius: 14, cursor: "pointer",
-              }}
-              className="hover:opacity-100"
+              className="absolute inset-0 bg-[rgba(26,24,20,0.7)] flex flex-col items-center justify-center gap-2 opacity-0 hover:opacity-100 transition-opacity rounded-xl cursor-pointer"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <span style={{ color: "white", fontSize: 13, fontFamily: "'DM Mono',monospace", letterSpacing: "0.05em" }}>
+              <span className="text-white text-[12px] font-dm-mono tracking-[0.05em]">
                 Rasmni almashtirish
               </span>
             </div>
           </>
         ) : (
           <>
-            <div style={{ width: 52, height: 52, background: "var(--surface2)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <div className="w-11 h-11 md:w-13 md:h-13 bg-surface2 rounded-xl flex items-center justify-center mx-auto mb-3 md:mb-4">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                 <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="var(--text-3)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 6, color: "var(--text)" }}>
+            <div className="text-[14px] md:text-[15px] font-medium mb-1.5 text-text">
               Entry screenshotni yuklang
             </div>
-            <div style={{ fontSize: 13, color: "var(--text-3)" }}>
+            <div className="text-[12px] md:text-[13px] text-text-3">
               TradingView, MT4, MT5 — PNG yoki JPG
             </div>
           </>
         )}
         <input
-          ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }}
+          ref={fileInputRef} type="file" accept="image/*" className="hidden"
           onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
         />
       </div>
 
       {/* Scanning */}
       {scanning && (
-        <div style={{ padding: "32px 28px", textAlign: "center" }}>
-          <div style={{ fontSize: 13, color: "var(--text-2)", marginBottom: 4 }}>AI chart ni o&apos;qiyabdi...</div>
-          <div style={{ width: "100%", height: 3, background: "var(--surface2)", borderRadius: 2, overflow: "hidden", margin: "16px 0 12px" }}>
-            <div style={{ height: "100%", background: "var(--teal)", borderRadius: 2, width: "35%", animation: "scan 1.8s ease-in-out infinite" }} />
+        <div className="py-8 md:py-8 px-5 md:px-7 text-center">
+          <div className="text-[12px] md:text-[13px] text-text-2 mb-1">AI chart ni o&apos;qiyabdi...</div>
+          <div className="w-full h-3 bg-surface2 rounded-md overflow-hidden my-4">
+            <div className="h-full bg-teal rounded-md w-[35%] animate-scan" />
           </div>
-          <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, color: "var(--text-2)", animation: "blink 1.2s ease-in-out infinite" }}>
+          <div className="font-dm-mono text-[11px] md:text-[12px] text-text-2 animate-blink">
             Asset va narxlarni aniqlamoqda
           </div>
         </div>
@@ -398,47 +378,48 @@ export default function NewTradePage() {
 
       {/* Form */}
       {formVisible && (
-        <div style={{ animation: "fadeIn 0.35s ease" }}>
+        <div className="animate-fadeIn">
           {/* Section 1 — Trade Info */}
-          <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16, padding: "24px 28px", marginBottom: 16, boxShadow: "var(--shadow)" }}>
-            <div style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 20, height: 20, background: "var(--surface2)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "var(--text-2)", fontFamily: "'DM Mono',monospace" }}>1</div>
+          <div className="bg-surface border border-border rounded-2xl p-5 md:p-6 lg:p-[24px_28px] mb-4 shadow-[var(--shadow)]">
+            <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-text-3 mb-4 md:mb-5 flex items-center gap-2">
+              <div className="w-5 h-5 bg-surface2 rounded-full flex items-center justify-center text-[10px] text-text-2 font-dm-mono">1</div>
               Trade ma&apos;lumotlari
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "var(--teal-bg)", color: "var(--teal)", fontSize: 10, fontFamily: "'DM Mono',monospace", padding: "3px 8px", borderRadius: 4, border: "1px solid var(--teal-br)" }}>
-                <div style={{ width: 5, height: 5, background: "var(--teal)", borderRadius: "50%", animation: "pulse 1.5s infinite" }} />
+              <div className="flex items-center gap-1.5 bg-teal-bg text-teal text-[10px] font-dm-mono px-2 py-0.5 rounded-md border border-teal-br">
+                <div className="w-1.5 h-1.5 bg-teal rounded-full animate-pulse" />
                 AI to&apos;ldirdi
               </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 14, marginBottom: 14 }}>
-              <div className={aiFields.has("asset") ? "ai-filled" : ""} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: 11, color: "var(--text-2)" }}>Asset / Pair</label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-[14px] mb-3.5 md:mb-[14px]">
+              <div className={`flex flex-col gap-1.5 md:gap-2 ${aiFields.has("asset") ? "ai-filled" : ""}`}>
+                <label className="text-[11px] text-text-2">Asset / Pair</label>
                 <input type="text" value={asset} onChange={(e) => setAsset(e.target.value)} placeholder="XAUUSD" className={aiFields.has("asset") ? "ai-auto" : ""} />
               </div>
-              <div className={aiFields.has("timeframe") ? "ai-filled" : ""} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: 11, color: "var(--text-2)" }}>Timeframe</label>
+              <div className={`flex flex-col gap-1.5 md:gap-2 ${aiFields.has("timeframe") ? "ai-filled" : ""}`}>
+                <label className="text-[11px] text-text-2">Timeframe</label>
                 <select value={timeframe} onChange={(e) => setTimeframe(e.target.value)} className={aiFields.has("timeframe") ? "ai-auto" : ""}>
                   <option value="">—</option>
                   {TIMEFRAMES.map((t) => <option key={t}>{t}</option>)}
                 </select>
               </div>
-              <div className={aiFields.has("session") ? "ai-filled" : ""} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: 11, color: "var(--text-2)" }}>Session</label>
+              <div className={`flex flex-col gap-1.5 md:gap-2 ${aiFields.has("session") ? "ai-filled" : ""}`}>
+                <label className="text-[11px] text-text-2">Session</label>
                 <select value={session} onChange={(e) => setSession(e.target.value)} className={aiFields.has("session") ? "ai-auto" : ""}>
                   <option value="">—</option>
                   {SESSIONS.map((s) => <option key={s}>{s}</option>)}
                 </select>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: 11, color: "var(--text-2)" }}>Yo&apos;nalish</label>
-                <div style={{ display: "flex", gap: 8 }}>
+              <div className="flex flex-col gap-1.5 md:gap-2">
+                <label className="text-[11px] text-text-2">Yo&apos;nalish</label>
+                <div className="flex gap-2">
                   {(["LONG", "SHORT"] as const).map((d) => (
-                    <button key={d} onClick={() => setDirection(direction === d ? null : d)} style={{
-                      flex: 1, padding: "9px 12px", borderRadius: 8, fontFamily: "'DM Mono',monospace", fontSize: 12, fontWeight: 500, cursor: "pointer", transition: "all 0.15s",
-                      border: `1px solid ${direction === d ? (d === "LONG" ? "var(--green-br)" : "var(--red-br)") : "var(--border)"}`,
-                      background: direction === d ? (d === "LONG" ? "var(--green-bg)" : "var(--red-bg)") : "var(--surface2)",
-                      color: direction === d ? (d === "LONG" ? "var(--green)" : "var(--red)") : "var(--text-2)",
-                    }}>
+                    <button key={d} onClick={() => setDirection(direction === d ? null : d)} className={`flex-1 py-2 md:py-[9px] px-3 md:px-3 rounded-lg font-dm-mono text-[11px] md:text-[12px] font-medium cursor-pointer transition-all border ${
+                      direction === d
+                        ? d === "LONG"
+                          ? "border-green-br bg-green-bg text-green"
+                          : "border-red-br bg-red-bg text-red"
+                        : "border-border bg-surface2 text-text-2"
+                    }`}>
                       {d === "LONG" ? "▲ Long" : "▼ Short"}
                     </button>
                   ))}
@@ -446,23 +427,20 @@ export default function NewTradePage() {
               </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 14 }}>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-[14px]">
               {[
                 { id: "entry", label: "Entry", value: entry, set: setEntry },
                 { id: "sl", label: "Stop Loss", value: sl, set: setSl },
                 { id: "tp", label: "Take Profit", value: tp, set: setTp },
               ].map(({ id, label, value, set }) => (
-                <div key={id} className={aiFields.has(id) ? "ai-filled" : ""} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  <label style={{ fontSize: 11, color: "var(--text-2)" }}>{label}</label>
+                <div key={id} className={`flex flex-col gap-1.5 md:gap-2 ${aiFields.has(id) ? "ai-filled" : ""}`}>
+                  <label className="text-[11px] text-text-2">{label}</label>
                   <input type="number" value={value} onChange={(e) => set(e.target.value)} placeholder="0.000" step="0.001" className={aiFields.has(id) ? "ai-auto" : ""} />
                 </div>
               ))}
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: 11, color: "var(--text-2)" }}>R : R</label>
-                <div style={{
-                  background: "var(--surface2)", borderRadius: 8, padding: "9px 12px", fontFamily: "'DM Mono',monospace",
-                  fontSize: 14, fontWeight: 500, color: rrColor, border: "1px solid var(--border)", minHeight: 37, display: "flex", alignItems: "center",
-                }}>
+              <div className="flex flex-col gap-1.5 md:gap-2">
+                <label className="text-[11px] text-text-2">R : R</label>
+                <div className="bg-surface2 rounded-lg py-2 md:py-[9px] px-3 md:px-3 font-dm-mono text-[13px] md:text-[14px] font-medium border border-border min-h-[34px] md:min-h-[37px] flex items-center" style={{ color: rrColor }}>
                   {rr !== null ? `${rr}R` : "—"}
                 </div>
               </div>
@@ -470,42 +448,41 @@ export default function NewTradePage() {
           </div>
 
           {/* Section 2 — Risk & Result */}
-          <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16, padding: "24px 28px", marginBottom: 16, boxShadow: "var(--shadow)" }}>
-            <div style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 20, height: 20, background: "var(--surface2)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "var(--text-2)", fontFamily: "'DM Mono',monospace" }}>2</div>
+          <div className="bg-surface border border-border rounded-2xl p-5 md:p-6 lg:p-[24px_28px] mb-4 shadow-[var(--shadow)]">
+            <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-text-3 mb-4 md:mb-5 flex items-center gap-2">
+              <div className="w-5 h-5 bg-surface2 rounded-full flex items-center justify-center text-[10px] text-text-2 font-dm-mono">2</div>
               Risk &amp; Natija
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "var(--teal-bg)", color: "var(--teal)", fontSize: 10, fontFamily: "'DM Mono',monospace", padding: "3px 8px", borderRadius: 4, border: "1px solid var(--teal-br)" }}>
-                <div style={{ width: 5, height: 5, background: "var(--teal)", borderRadius: "50%", animation: "pulse 1.5s infinite" }} />
+              <div className="flex items-center gap-1.5 bg-teal-bg text-teal text-[10px] font-dm-mono px-2 py-0.5 rounded-md border border-teal-br">
+                <div className="w-1.5 h-1.5 bg-teal rounded-full animate-pulse" />
                 Hisob sozlamalaridan
               </div>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 14, marginBottom: 14 }}>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-[14px] mb-3.5 md:mb-[14px]">
               {[
                 { label: "Lot size", value: lotSize, set: setLotSize, placeholder: "0.01", step: "0.01", readonly: false },
                 { label: "Risk ($)", value: riskDollar, set: setRiskDollar, placeholder: "0.00", step: "0.01", readonly: true },
                 { label: "Risk (%)", value: riskPercent, set: setRiskPercent, placeholder: "1.0", step: "0.1", readonly: false },
                 { label: "P&L ($)", value: pnl, set: setPnl, placeholder: "0.00", step: "0.01", readonly: false },
               ].map(({ label, value, set, placeholder, step, readonly }) => (
-                <div key={label} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  <label style={{ fontSize: 11, color: "var(--text-2)" }}>{label}</label>
+                <div key={label} className="flex flex-col gap-1.5 md:gap-2">
+                  <label className="text-[11px] text-text-2">{label}</label>
                   <input type="number" value={value} onChange={(e) => set(e.target.value)} placeholder={placeholder} step={step} readOnly={readonly} style={readonly ? { opacity: 0.6, cursor: "default" } : {}} />
                 </div>
               ))}
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <label style={{ fontSize: 11, color: "var(--text-2)" }}>Natija</label>
-              <div style={{ display: "flex", gap: 8 }}>
+            <div className="flex flex-col gap-1.5 md:gap-2">
+              <label className="text-[11px] text-text-2">Natija</label>
+              <div className="flex gap-2">
                 {([
                   { key: "win", label: "✓ Win", on: { bg: "var(--green-bg)", border: "var(--green-br)", color: "var(--green)" } },
                   { key: "loss", label: "✗ Loss", on: { bg: "var(--red-bg)", border: "var(--red-br)", color: "var(--red)" } },
                   { key: "be", label: "~ BE", on: { bg: "var(--amber-bg)", border: "var(--amber-br)", color: "var(--amber)" } },
                 ] as const).map(({ key, label, on }) => (
-                  <button key={key} onClick={() => setResult(result === key ? null : key)} style={{
-                    flex: 1, padding: 9, borderRadius: 8, fontSize: 12, fontWeight: 500, cursor: "pointer", transition: "all 0.15s", fontFamily: "'DM Mono',monospace",
-                    border: `1px solid ${result === key ? on.border : "var(--border)"}`,
-                    background: result === key ? on.bg : "var(--surface2)",
-                    color: result === key ? on.color : "var(--text-2)",
-                  }}>
+                  <button key={key} onClick={() => setResult(result === key ? null : key)} className={`flex-1 py-2 md:py-[9px] rounded-lg text-[11px] md:text-[12px] font-medium cursor-pointer transition-all font-dm-mono border ${
+                    result === key
+                      ? `border-[${on.border}] bg-[${on.bg}] text-[${on.color}]`
+                      : "border-border bg-surface2 text-text-2"
+                  }`}>
                     {label}
                   </button>
                 ))}
@@ -514,50 +491,45 @@ export default function NewTradePage() {
           </div>
 
           {/* Section 3 — AI Analysis */}
-          <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16, padding: "24px 28px", marginBottom: 16, boxShadow: "var(--shadow)" }}>
-            <div style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 20, height: 20, background: "var(--surface2)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "var(--text-2)", fontFamily: "'DM Mono',monospace" }}>3</div>
+          <div className="bg-surface border border-border rounded-2xl p-5 md:p-6 lg:p-[24px_28px] mb-4 shadow-[var(--shadow)]">
+            <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-text-3 mb-4 md:mb-5 flex items-center gap-2">
+              <div className="w-5 h-5 bg-surface2 rounded-full flex items-center justify-center text-[10px] text-text-2 font-dm-mono">3</div>
               AI tahlili
-              <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "var(--teal-bg)", color: "var(--teal)", fontSize: 10, fontFamily: "'DM Mono',monospace", padding: "3px 8px", borderRadius: 4, border: "1px solid var(--teal-br)" }}>
-                <div style={{ width: 5, height: 5, background: "var(--teal)", borderRadius: "50%", animation: "pulse 1.5s infinite" }} />
+              <div className="flex items-center gap-1.5 bg-teal-bg text-teal text-[10px] font-dm-mono px-2 py-0.5 rounded-md border border-teal-br">
+                <div className="w-1.5 h-1.5 bg-teal rounded-full animate-pulse" />
                 Chuqur tahlil
               </div>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: 11, color: "var(--text-2)" }}>HTF Trend</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-[14px] mb-3.5 md:mb-[14px]">
+              <div className={`flex flex-col gap-1.5 md:gap-2 ${aiFields.has("htfTrend") ? "ai-filled" : ""}`}>
+                <label className="text-[11px] text-text-2">HTF Trend</label>
                 <input type="text" value={htfTrend} onChange={(e) => setHtfTrend(e.target.value)} placeholder="Bearish · H4" className={aiFields.has("htfTrend") ? "ai-auto" : ""} />
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: 11, color: "var(--text-2)" }}>Chart tahlili</label>
-                <div style={{
-                  background: "var(--teal-bg)", border: "1px solid var(--teal-br)", borderLeft: "3px solid var(--teal)",
-                  borderRadius: "0 8px 8px 0", padding: "12px 14px", fontSize: 13, lineHeight: 1.7,
-                  color: "var(--text)", minHeight: 56,
-                }}>
+              <div className="flex flex-col gap-1.5 md:gap-2">
+                <label className="text-[11px] text-text-2">Chart tahlili</label>
+                <div className="bg-teal-bg border border-teal-br border-l-[3px] border-teal rounded-r-lg py-2 md:py-3 px-3 md:px-4 text-[12px] md:text-[13px] leading-[1.7] text-text min-h-[52px] md:min-h-[56px]">
                   {narrative || "—"}
                 </div>
               </div>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14 }}>
-              <label style={{ fontSize: 11, color: "var(--text-2)" }}>Confluence</label>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
+            <div className="flex flex-col gap-1.5 md:gap-2 mb-3.5 md:mb-[14px]">
+              <label className="text-[11px] text-text-2">Confluence</label>
+              <div className="flex flex-wrap gap-1.5 mt-1.5">
                 {confluenceTags.map((tag) => (
-                  <button key={tag} onClick={() => setSelectedConfluence((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag])} style={{
-                    padding: "5px 12px", borderRadius: 6, fontSize: 12, cursor: "pointer", transition: "all 0.15s", userSelect: "none",
-                    border: `1px solid ${selectedConfluence.includes(tag) ? "var(--purple-br)" : "var(--border)"}`,
-                    background: selectedConfluence.includes(tag) ? "var(--purple-bg)" : "var(--surface2)",
-                    color: selectedConfluence.includes(tag) ? "var(--purple)" : "var(--text-2)",
-                  }}>
+                  <button key={tag} onClick={() => setSelectedConfluence((prev) => prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag])} className={`py-1 md:py-[5px] px-3 md:px-3 rounded-lg text-[11px] md:text-[12px] cursor-pointer transition-all select-none border ${
+                    selectedConfluence.includes(tag)
+                      ? "border-purple-br bg-purple-bg text-purple"
+                      : "border-border bg-surface2 text-text-2"
+                  }`}>
                     {tag}
                   </button>
                 ))}
               </div>
             </div>
             {profile?.feedback_enabled && feedback && (
-              <div style={{ background: "var(--amber-bg)", border: "1px solid var(--amber-br)", borderLeft: "3px solid var(--amber)", borderRadius: "0 8px 8px 0", padding: "12px 14px", fontSize: 13, lineHeight: 1.7, color: "var(--text)", marginTop: 12 }}>
-                <div style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--amber)", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+              <div className="bg-amber-bg border border-amber-br border-l-[3px] border-amber rounded-r-lg py-2 md:py-3 px-3 md:px-4 text-[12px] md:text-[13px] leading-[1.7] text-text mt-3">
+                <div className="text-[10px] font-medium tracking-[0.1em] uppercase text-amber mb-1.5 flex items-center gap-1.5">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
                     <path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17H8v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   AI Feedback
@@ -568,88 +540,77 @@ export default function NewTradePage() {
           </div>
 
           {/* Section 4 & 5 — Checklist & Psychology */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             {/* Checklist */}
-            <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16, padding: "24px 28px", boxShadow: "var(--shadow)" }}>
-              <div style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 20, height: 20, background: "var(--surface2)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "var(--text-2)", fontFamily: "'DM Mono',monospace" }}>4</div>
+            <div className="bg-surface border border-border rounded-2xl p-5 md:p-[24px_28px] shadow-[var(--shadow)]">
+              <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-text-3 mb-4 md:mb-5 flex items-center gap-2">
+                <div className="w-5 h-5 bg-surface2 rounded-full flex items-center justify-center text-[10px] text-text-2 font-dm-mono">4</div>
                 Pre-trade checklist
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {checklistItems.map((item, i) => (
-                  <div key={i} onClick={() => setChecklist((prev) => ({ ...prev, [i]: !prev[i] }))} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", userSelect: "none" }}>
-                    <div style={{
-                      width: 18, height: 18, borderRadius: 5,
-                      border: `1px solid ${checklist[i] ? "var(--green)" : "var(--border-dark)"}`,
-                      background: checklist[i] ? "var(--green)" : "var(--surface2)",
-                      flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s",
-                    }}>
-                      {checklist[i] && (
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+              <div className="flex flex-col gap-2.5">
+                {checklistItems.map((item) => (
+                  <div key={item} onClick={() => setChecklist((prev) => ({ ...prev, [item]: !prev[item] }))} className="flex items-center gap-2.5 cursor-pointer select-none">
+                    <div className={`w-4.5 h-4.5 md:w-[18px] md:h-[18px] rounded-md border transition-all flex items-center justify-center ${
+                      checklist[item] ? "border-green bg-green" : "border-border-dark bg-surface2"
+                    }`}>
+                      {checklist[item] && (
+                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none">
                           <path d="M20 6L9 17l-5-5" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                       )}
                     </div>
-                    <span style={{ fontSize: 13, color: "var(--text)" }}>{item}</span>
+                    <span className="text-[12px] md:text-[13px] text-text">{item}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Psychology */}
-            <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16, padding: "24px 28px", boxShadow: "var(--shadow)" }}>
-              <div style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 20, height: 20, background: "var(--surface2)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: "var(--text-2)", fontFamily: "'DM Mono',monospace" }}>5</div>
+            <div className="bg-surface border border-border rounded-2xl p-5 md:p-[24px_28px] shadow-[var(--shadow)]">
+              <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-text-3 mb-4 md:mb-5 flex items-center gap-2">
+                <div className="w-5 h-5 bg-surface2 rounded-full flex items-center justify-center text-[10px] text-text-2 font-dm-mono">5</div>
                 Psixologiya
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14 }}>
-                <label style={{ fontSize: 11, color: "var(--text-2)" }}>Kayfiyat</label>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              <div className="flex flex-col gap-1.5 md:gap-2 mb-3.5 md:mb-[14px]">
+                <label className="text-[11px] text-text-2">Kayfiyat</label>
+                <div className="flex flex-wrap gap-1.5">
                   {MOODS.map((mood) => (
-                    <button key={mood} onClick={() => setMoods((prev) => prev.includes(mood) ? prev.filter((m) => m !== mood) : [...prev, mood])} style={{
-                      padding: "5px 12px", borderRadius: 6, fontSize: 12, cursor: "pointer", transition: "all 0.15s", userSelect: "none",
-                      border: `1px solid ${moods.includes(mood) ? "var(--amber-br)" : "var(--border)"}`,
-                      background: moods.includes(mood) ? "var(--amber-bg)" : "var(--surface2)",
-                      color: moods.includes(mood) ? "var(--amber)" : "var(--text-2)",
-                    }}>
+                    <button key={mood} onClick={() => setMoods((prev) => prev.includes(mood) ? prev.filter((m) => m !== mood) : [...prev, mood])} className={`py-1 md:py-[5px] px-3 md:px-3 rounded-lg text-[11px] md:text-[12px] cursor-pointer transition-all select-none border ${
+                      moods.includes(mood)
+                        ? "border-amber-br bg-amber-bg text-amber"
+                        : "border-border bg-surface2 text-text-2"
+                    }`}>
                       {mood}
                     </button>
                   ))}
                 </div>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14 }}>
-                <label style={{ fontSize: 11, color: "var(--text-2)" }}>Rejaga amal qilish</label>
-                <div style={{ display: "flex", gap: 4, cursor: "pointer" }}>
+              <div className="flex flex-col gap-1.5 md:gap-2 mb-3.5 md:mb-[14px]">
+                <label className="text-[11px] text-text-2">Rejaga amal qilish</label>
+                <div className="flex gap-1 cursor-pointer">
                   {[1, 2, 3, 4, 5].map((n) => (
-                    <span key={n} onClick={() => setStars(stars === n ? 0 : n)} style={{ fontSize: 20, color: n <= stars ? "#f59e0b" : "var(--border-dark)", transition: "color 0.1s", cursor: "pointer" }}>
+                    <span key={n} onClick={() => setStars(stars === n ? 0 : n)} className="text-[18px] md:text-[20px] transition-colors cursor-pointer" style={{ color: n <= stars ? "#f59e0b" : "var(--border-dark)" }}>
                       ★
                     </span>
                   ))}
                 </div>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14 }}>
-                <label style={{ fontSize: 11, color: "var(--text-2)" }}>Yaxshi qilganim</label>
-                <textarea value={wentWell} onChange={(e) => setWentWell(e.target.value)} placeholder="Nima to'g'ri ketdi?" />
+              <div className="flex flex-col gap-1.5 md:gap-2 mb-3.5 md:mb-[14px]">
+                <label className="text-[11px] text-text-2">Yaxshi qilganim</label>
+                <textarea value={wentWell} onChange={(e) => setWentWell(e.target.value)} placeholder="Nima to'g'ri ketdi?" className="h-14 md:min-h-[72px]" />
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: 11, color: "var(--text-2)" }}>Yaxshilash kerak</label>
-                <textarea value={improve} onChange={(e) => setImprove(e.target.value)} placeholder="Nima o'zgartirish kerak?" />
+              <div className="flex flex-col gap-1.5 md:gap-2">
+                <label className="text-[11px] text-text-2">Yaxshilash kerak</label>
+                <textarea value={improve} onChange={(e) => setImprove(e.target.value)} placeholder="Nima o'zgartirish kerak?" className="h-14 md:min-h-[72px]" />
               </div>
             </div>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, marginBottom: 48 }}>
-            <button onClick={() => router.push("/journal")} style={{
-              padding: "8px 14px", background: "var(--surface2)", color: "var(--text-2)", border: "1px solid var(--border)",
-              borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13, cursor: "pointer",
-            }}>
+          <div className="flex justify-end gap-3 mb-12">
+            <button onClick={() => router.push("/journal")} className="px-3.5 md:px-3.5 py-2 md:py-2 bg-surface2 text-text-2 border border-border rounded-lg font-dm-sans text-[12px] md:text-[13px] cursor-pointer">
               Bekor qilish
             </button>
-            <button onClick={saveTrade} disabled={saving} style={{
-              padding: "14px 32px", background: "var(--text)", color: "white", border: "none", borderRadius: 10,
-              fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 500, cursor: saving ? "not-allowed" : "pointer",
-              opacity: saving ? 0.6 : 1, transition: "all 0.2s",
-            }}>
+            <button onClick={saveTrade} disabled={saving} className="px-5 md:px-8 py-2.5 md:py-3.5 bg-text text-white border-none rounded-lg font-dm-sans text-[13px] md:text-[14px] font-medium cursor-pointer transition-all disabled:not-allowed disabled:opacity-60" style={{ opacity: saving ? 0.6 : 1 }}>
               {saving ? "Saqlanmoqda..." : "Jurnalga saqlash →"}
             </button>
           </div>

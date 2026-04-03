@@ -1,10 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "./ThemeProvider";
 import { formatPnl, getInitials } from "@/lib/utils";
 import type { Profile } from "@/types";
+import NavItem from "./ui/NavItem";
+import StatItem from "./ui/StatItem";
+import UserCard from "./ui/UserCard";
 
 interface SidebarStats {
   pnl: number | null;
@@ -12,6 +14,72 @@ interface SidebarStats {
   count: number;
   avgRR: number | null;
 }
+
+const navItems = [
+  {
+    id: "journal",
+    href: "/journal",
+    label: "Jurnal",
+    icon: (
+      <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
+        <path
+          d="M2 4h12M2 8h8M2 12h5"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+  {
+    id: "new",
+    href: "/journal/new",
+    label: "Yangi trade",
+    icon: (
+      <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
+        <path
+          d="M8 5v6M5 8h6"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+      </svg>
+    ),
+  },
+  {
+    id: "stats",
+    href: "/stats",
+    label: "Statistika",
+    icon: (
+      <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
+        <path
+          d="M2 13V8l3 3 3-4 5 4"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+  },
+  {
+    id: "settings",
+    href: "/settings",
+    label: "Sozlamalar",
+    icon: (
+      <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
+        <path
+          d="M6.5 1.5H9.5L10 3.5C10.4 3.7 10.8 3.9 11.1 4.2L13 3.5L14.5 6L13 7.2C13 7.5 13 7.7 13 8C13 8.3 13 8.5 13 8.8L14.5 10L13 12.5L11.1 11.8C10.8 12.1 10.4 12.3 10 12.5L9.5 14.5H6.5L6 12.5C5.6 12.3 5.2 12.1 4.9 11.8L3 12.5L1.5 10L3 8.8C3 8.5 3 8.3 3 8C3 7.7 3 7.5 3 7.2L1.5 6L3 3.5L4.9 4.2C5.2 3.9 5.6 3.7 6 3.5L6.5 1.5Z"
+          stroke="currentColor"
+          strokeWidth="1.3"
+          strokeLinejoin="round"
+        />
+        <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.3" />
+      </svg>
+    ),
+  },
+];
 
 export default function Sidebar({
   profile,
@@ -23,180 +91,120 @@ export default function Sidebar({
   const pathname = usePathname();
   const { theme, toggle } = useTheme();
 
-  const navItems = [
-    {
-      id: "journal",
-      href: "/journal",
-      label: "Jurnal",
-      icon: (
-        <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 16 16" fill="none">
-          <path d="M2 4h12M2 8h8M2 12h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      ),
-    },
-    {
-      id: "new",
-      href: "/journal/new",
-      label: "Yangi trade",
-      icon: (
-        <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 16 16" fill="none">
-          <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
-          <path d="M8 5v6M5 8h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        </svg>
-      ),
-    },
-    {
-      id: "stats",
-      href: "/stats",
-      label: "Statistika",
-      icon: (
-        <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 16 16" fill="none">
-          <path d="M2 13V8l3 3 3-4 5 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      ),
-    },
-    {
-      id: "settings",
-      href: "/settings",
-      label: "Sozlamalar",
-      icon: (
-        <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 16 16" fill="none">
-          <path d="M6.5 1.5H9.5L10 3.5C10.4 3.7 10.8 3.9 11.1 4.2L13 3.5L14.5 6L13 7.2C13 7.5 13 7.7 13 8C13 8.3 13 8.5 13 8.8L14.5 10L13 12.5L11.1 11.8C10.8 12.1 10.4 12.3 10 12.5L9.5 14.5H6.5L6 12.5C5.6 12.3 5.2 12.1 4.9 11.8L3 12.5L1.5 10L3 8.8C3 8.5 3 8.3 3 8C3 7.7 3 7.5 3 7.2L1.5 6L3 3.5L4.9 4.2C5.2 3.9 5.6 3.7 6 3.5L6.5 1.5Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" />
-          <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.3" />
-        </svg>
-      ),
-    },
-  ];
-
   const isActive = (href: string) => {
-    if (href === "/journal") return pathname === "/journal" || pathname.startsWith("/journal/") && !pathname.startsWith("/journal/new");
+    if (href === "/journal")
+      return (
+        pathname === "/journal" ||
+        (pathname.startsWith("/journal/") &&
+          !pathname.startsWith("/journal/new"))
+      );
     return pathname.startsWith(href);
   };
 
-  const pnlColor = stats.pnl === null ? "" : stats.pnl >= 0 ? "g" : "r";
+  const pnlColor =
+    stats.pnl === null
+      ? ("" as const)
+      : stats.pnl >= 0
+      ? ("g" as const)
+      : ("r" as const);
 
   return (
-    <aside
-      style={{
-        background: "var(--surface)",
-        borderRight: "1px solid var(--border)",
-        padding: "28px 20px",
-        position: "sticky",
-        top: 0,
-        height: "100vh",
-        overflowY: "auto",
-        display: "flex",
-        flexDirection: "column",
-      }}
-      className="hidden md:flex"
-    >
+    <aside className="hidden md:flex flex-col bg-surface border-r border-border px-5 py-7 sticky top-0 h-screen overflow-y-auto">
       {/* Logo */}
-      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 22, fontWeight: 500, color: "var(--text)", marginBottom: 32, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ width: 8, height: 8, background: "var(--teal)", borderRadius: "50%" }} />
+      <div className="flex items-center justify-between mb-8">
+        <span className="font-fraunces text-xl font-medium text-text flex items-center gap-2">
+          <span className="w-2 h-2 bg-teal rounded-full inline-block" />
           TradeLog
-        </div>
+        </span>
+
         <button
           onClick={toggle}
           title="Mavzu"
-          style={{
-            width: 30, height: 30, borderRadius: 7, border: "1px solid var(--border)",
-            background: "var(--surface2)", cursor: "pointer", display: "flex",
-            alignItems: "center", justifyContent: "center", color: "var(--text-2)",
-            transition: "all 0.2s",
-          }}
+          className="w-8 h-8 rounded-lg border border-border bg-surface2 flex items-center justify-center text-text-2 cursor-pointer transition-all duration-200 hover:bg-surface3"
         >
           {theme === "dark" ? (
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="1.8" />
-              <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              <circle
+                cx="12"
+                cy="12"
+                r="5"
+                stroke="currentColor"
+                strokeWidth="1.8"
+              />
+              <path
+                d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
             </svg>
           ) : (
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              <path
+                d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           )}
         </button>
       </div>
 
-      {/* Nav */}
-      <div style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 8, padding: "0 4px" }}>
+      {/* Nav section label */}
+      <p className="text-[10px] font-medium tracking-[0.12em] uppercase text-text-3 mb-2 px-1">
         Menu
-      </div>
-      {navItems.map((item) => {
-        const active = isActive(item.href);
-        return (
-          <Link
+      </p>
+
+      {/* Nav */}
+      <nav className="flex flex-col">
+        {navItems.map((item) => (
+          <NavItem
             key={item.id}
             href={item.href}
-            style={{
-              display: "flex", alignItems: "center", gap: 10, padding: "9px 12px",
-              borderRadius: 8, fontSize: 13,
-              color: active ? (theme === "dark" ? "var(--text)" : "#fff") : "var(--text-2)",
-              cursor: "pointer", transition: "all 0.15s", marginBottom: 2,
-              border: active && theme === "dark" ? "1px solid var(--border-dark)" : "1px solid transparent",
-              background: active
-                ? theme === "dark" ? "var(--surface3)" : "var(--text)"
-                : "transparent",
-              textDecoration: "none",
-            }}
-          >
-            <span style={{ opacity: active ? 1 : 0.6, color: active ? (theme === "light" ? "#fff" : "var(--text)") : "var(--text-2)" }}>
-              {item.icon}
-            </span>
-            {item.label}
-          </Link>
-        );
-      })}
+            label={item.label}
+            icon={item.icon}
+            active={isActive(item.href)}
+            isDark={theme === "dark"}
+          />
+        ))}
+      </nav>
 
       {/* Today stats */}
-      <div style={{ marginTop: 28, paddingTop: 20, borderTop: "1px solid var(--border)" }}>
-        <div style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 12, padding: "0 4px" }}>
+      <div className="mt-7 pt-5 border-t border-border">
+        <p className="text-[10px] font-medium tracking-[0.12em] uppercase text-text-3 mb-3 px-1">
           Bugun
-        </div>
-        {[
-          { label: "P&L", value: stats.pnl !== null ? formatPnl(stats.pnl, profile?.currency) : "—", color: pnlColor },
-          { label: "Win rate", value: stats.winRate !== null ? `${stats.winRate}%` : "—", color: "" },
-          { label: "Tradelar", value: String(stats.count), color: "" },
-          { label: "Avg R:R", value: stats.avgRR !== null ? `${stats.avgRR.toFixed(2)}R` : "—", color: "" },
-        ].map((s) => (
-          <div key={s.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 4px" }}>
-            <span style={{ fontSize: 12, color: "var(--text-2)" }}>{s.label}</span>
-            <span style={{
-              fontFamily: "'DM Mono', monospace", fontSize: 12, fontWeight: 500,
-              color: s.color === "g" ? "var(--green)" : s.color === "r" ? "var(--red)" : "var(--text)",
-            }}>
-              {s.value}
-            </span>
-          </div>
-        ))}
+        </p>
+        <StatItem
+          label="P&L"
+          value={
+            stats.pnl !== null
+              ? formatPnl(stats.pnl, profile?.currency)
+              : "—"
+          }
+          color={pnlColor}
+        />
+        <StatItem
+          label="Win rate"
+          value={stats.winRate !== null ? `${stats.winRate}%` : "—"}
+        />
+        <StatItem label="Tradelar" value={String(stats.count)} />
+        <StatItem
+          label="Avg R:R"
+          value={
+            stats.avgRR !== null ? `${stats.avgRR.toFixed(2)}R` : "—"
+          }
+        />
       </div>
 
       {/* User */}
-      <div style={{ marginTop: "auto", paddingTop: 20, borderTop: "1px solid var(--border)" }}>
-        <Link href="/settings" style={{
-          display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
-          borderRadius: 8, cursor: "pointer", transition: "background 0.15s", textDecoration: "none",
-        }}
-          className="hover:bg-[var(--surface2)]"
-        >
-          <div style={{
-            width: 32, height: 32, borderRadius: 8, background: "var(--teal-bg)",
-            border: "1px solid var(--teal-br)", display: "flex", alignItems: "center",
-            justifyContent: "center", fontSize: 13, fontWeight: 600, color: "var(--teal)",
-            flexShrink: 0, fontFamily: "'DM Mono', monospace",
-          }}>
-            {getInitials(profile?.full_name ?? null)}
-          </div>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text)" }}>
-              {profile?.full_name || "Trader"}
-            </div>
-            <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 1 }}>
-              {profile?.plan === "free" ? "Free plan" : "Pro plan"}
-            </div>
-          </div>
-        </Link>
+      <div className="mt-auto pt-5 border-t border-border">
+        <UserCard
+          initials={getInitials(profile?.full_name ?? null)}
+          name={profile?.full_name || "Trader"}
+          plan={profile?.plan === "free" ? "Free plan" : "Pro plan"}
+        />
       </div>
     </aside>
   );

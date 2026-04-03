@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 interface ToastProps {
   message: string;
@@ -18,42 +18,25 @@ export default function Toast({ message, show, onHide }: ToastProps) {
 
   return (
     <div
-      style={{
-        position: "fixed",
-        bottom: 32,
-        left: "50%",
-        transform: show
-          ? "translateX(-50%) translateY(0)"
-          : "translateX(-50%) translateY(80px)",
-        background: "var(--text)",
-        color: "white",
-        padding: "13px 22px",
-        borderRadius: 10,
-        fontSize: 13,
-        fontWeight: 500,
-        transition: "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
-        zIndex: 999,
-        whiteSpace: "nowrap",
-        display: "flex",
-        alignItems: "center",
-        gap: 10,
-        boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
-      }}
+      className={[
+        "fixed bottom-8 left-1/2 -translate-x-1/2 z-[999]",
+        "bg-text text-white px-5 py-3 rounded-xl",
+        "text-sm font-medium whitespace-nowrap",
+        "flex items-center gap-2.5",
+        "shadow-[0_8px_32px_rgba(0,0,0,0.2)]",
+        "transition-[transform] duration-[400ms] [transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)]",
+        show ? "translate-y-0" : "translate-y-20",
+      ].join(" ")}
     >
-      <div
-        style={{
-          width: 18,
-          height: 18,
-          background: "var(--green-bg)",
-          borderRadius: "50%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
+      <div className="w-[18px] h-[18px] bg-green-bg rounded-full flex items-center justify-center shrink-0">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-          <path d="M20 6L9 17l-5-5" stroke="var(--green)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path
+            d="M20 6L9 17l-5-5"
+            stroke="var(--green)"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
       </div>
       {message}

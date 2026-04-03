@@ -36,7 +36,7 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
   }
 
   const Pill = ({ children, style }: { children: React.ReactNode; style: React.CSSProperties }) => (
-    <span style={{ fontSize: 10, fontWeight: 500, padding: "2px 8px", borderRadius: 5, fontFamily: "'DM Mono',monospace", letterSpacing: "0.03em", ...style }}>
+    <span className="text-[10px] font-medium py-0.5 px-2 md:py-[2px] md:px-[8px] rounded-md font-dm-mono tracking-[0.03em]" style={style}>
       {children}
     </span>
   );
@@ -44,33 +44,21 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
   return (
     <div>
       {/* Actions */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 24 }}>
-        <button onClick={() => router.push("/journal")} style={{
-          display: "flex", alignItems: "center", gap: 6, padding: "8px 14px",
-          background: "var(--surface2)", color: "var(--text-2)", border: "1px solid var(--border)",
-          borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13, cursor: "pointer",
-        }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+      <div className="flex items-center gap-2 md:gap-2.5 mb-5 md:mb-6">
+        <button onClick={() => router.push("/journal")} className="flex items-center gap-1.5 px-3 md:px-[14px] py-2 md:py-[8px] bg-surface2 text-text-2 border border-border rounded-lg font-dm-sans text-[12px] md:text-[13px] cursor-pointer">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
             <path d="M19 12H5M12 5l-7 7 7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           Orqaga
         </button>
-        <button onClick={() => router.push(`/journal/${trade.id}/edit`)} style={{
-          display: "flex", alignItems: "center", gap: 6, padding: "8px 14px",
-          background: "var(--surface2)", color: "var(--text-2)", border: "1px solid var(--border)",
-          borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13, cursor: "pointer",
-        }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <button onClick={() => router.push(`/journal/${trade.id}/edit`)} className="flex items-center gap-1.5 px-3 md:px-[14px] py-2 md:py-[8px] bg-surface2 text-text-2 border border-border rounded-lg font-dm-sans text-[12px] md:text-[13px] cursor-pointer">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
             <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           Tahrirlash
         </button>
-        <button onClick={() => setShowDeleteModal(true)} style={{
-          display: "flex", alignItems: "center", gap: 6, padding: "8px 14px",
-          background: "var(--red-bg)", color: "var(--red)", border: "1px solid var(--red-br)",
-          borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13, cursor: "pointer",
-        }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <button onClick={() => setShowDeleteModal(true)} className="flex items-center gap-1.5 px-3 md:px-[14px] py-2 md:py-[8px] bg-red-bg text-red border border-red-br rounded-lg font-dm-sans text-[12px] md:text-[13px] cursor-pointer">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
             <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           O&apos;chirish
@@ -78,12 +66,12 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
       </div>
 
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 28 }}>
+      <div className="flex items-start justify-between mb-5 md:mb-7">
         <div>
-          <div style={{ fontFamily: "'Fraunces',serif", fontSize: 28, fontWeight: 300, letterSpacing: "-0.5px", color: "var(--text)" }}>
+          <div className="font-fraunces text-[22px] md:text-[28px] font-light tracking-[-0.5px] text-text">
             {trade.asset || "—"}
           </div>
-          <div style={{ display: "flex", gap: 7, marginTop: 8 }}>
+          <div className="flex gap-1.5 md:gap-2 mt-2">
             {trade.direction && <Pill style={{ background: dirStyle.bg, color: dirStyle.color }}>{trade.direction}</Pill>}
             {trade.result && <Pill style={{ background: resStyle.bg, color: resStyle.color }}>{resStyle.label}</Pill>}
             {trade.timeframe && <Pill style={{ background: "var(--surface2)", color: "var(--text-2)", border: "1px solid var(--border)" }}>{trade.timeframe}</Pill>}
@@ -91,34 +79,34 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
             {trade.rr !== null && <Pill style={{ background: "var(--surface2)", color: trade.rr >= 2 ? "var(--green)" : trade.rr >= 1 ? "var(--amber)" : "var(--red)", border: "1px solid var(--border)" }}>{trade.rr.toFixed(2)}R</Pill>}
           </div>
         </div>
-        <div style={{ textAlign: "right" }}>
-          <div style={{ fontSize: 24, fontWeight: 500, fontFamily: "'DM Mono',monospace", color: pnlColor }}>
+        <div className="text-right">
+          <div className="text-[20px] md:text-[24px] font-medium font-dm-mono" style={{ color: pnlColor }}>
             {trade.pnl !== null ? formatPnl(trade.pnl, profile?.currency) : "—"}
           </div>
-          <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 4, fontFamily: "'DM Mono',monospace" }}>
+          <div className="text-[11px] md:text-[12px] text-text-3 mt-1 font-dm-mono">
             {formatDate(trade.created_at)} · {formatTime(trade.created_at)}
           </div>
         </div>
       </div>
 
       {/* Main grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         {/* AI Analysis */}
-        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16, padding: "24px 28px", boxShadow: "var(--shadow)" }}>
-          <div style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+        <div className="bg-surface border border-border rounded-2xl p-4 md:p-6 shadow-[var(--shadow)]">
+          <div className="text-[10px] font-medium tracking-[0.12em] uppercase text-text-3 mb-4 flex items-center gap-2">
             AI tahlili
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "var(--teal-bg)", color: "var(--teal)", fontSize: 10, fontFamily: "'DM Mono',monospace", padding: "3px 8px", borderRadius: 4, border: "1px solid var(--teal-br)" }}>
-              <span style={{ width: 5, height: 5, background: "var(--teal)", borderRadius: "50%", animation: "pulse 1.5s infinite", display: "inline-block" }} />
+            <span className="inline-flex items-center gap-1.5 bg-teal-bg text-teal text-[10px] font-dm-mono py-0.5 px-2 rounded-md border border-teal-br">
+              <span className="w-1.5 h-1.5 bg-teal rounded-full inline-block animate-pulse" />
               Chuqur tahlil
             </span>
           </div>
-          <div style={{ background: "var(--teal-bg)", border: "1px solid var(--teal-br)", borderLeft: "3px solid var(--teal)", borderRadius: "0 8px 8px 0", padding: "12px 14px", fontSize: 13, lineHeight: 1.7, color: "var(--text)", marginBottom: 12 }}>
+          <div className="bg-teal-bg border border-teal-br border-l-[3px] border-teal rounded-r-lg py-2 md:py-3 px-3 md:px-4 text-[12px] md:text-[13px] leading-[1.7] text-text mb-3">
             {trade.ai_narrative || "—"}
           </div>
           {profile?.feedback_enabled && trade.ai_feedback && (
-            <div style={{ background: "var(--amber-bg)", border: "1px solid var(--amber-br)", borderLeft: "3px solid var(--amber)", borderRadius: "0 8px 8px 0", padding: "12px 14px", fontSize: 13, lineHeight: 1.7, color: "var(--text)" }}>
-              <div style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--amber)", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+            <div className="bg-amber-bg border border-amber-br border-l-[3px] border-amber rounded-r-lg py-2 md:py-3 px-3 md:px-4 text-[12px] md:text-[13px] leading-[1.7] text-text">
+              <div className="text-[10px] font-medium tracking-[0.1em] uppercase text-amber mb-1.5 flex items-center gap-1.5">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
                   <path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17H8v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 AI Feedback
@@ -129,8 +117,8 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
         </div>
 
         {/* Trade info */}
-        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16, padding: "24px 28px", boxShadow: "var(--shadow)" }}>
-          <div style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 16 }}>
+        <div className="bg-surface border border-border rounded-2xl p-4 md:p-6 shadow-[var(--shadow)]">
+          <div className="text-[10px] font-medium tracking-[0.12em] uppercase text-text-3 mb-4">
             Trade ma&apos;lumotlari
           </div>
           {[
@@ -140,29 +128,40 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
             { label: "Lot size", value: trade.lot_size ?? "—" },
             { label: "Risk %", value: trade.risk_percent ? `${trade.risk_percent}%` : "—" },
             { label: "Risk $", value: trade.risk_dollar ? `$${trade.risk_dollar}` : "—" },
-            { label: "HTF Trend", value: trade.htf_trend ?? "—" },
           ].map(({ label, value }) => (
-            <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
-              <span style={{ fontSize: 12, color: "var(--text-2)" }}>{label}</span>
-              <span style={{ fontFamily: "'DM Mono',monospace", fontSize: 12, fontWeight: 500, color: "var(--text)" }}>{String(value)}</span>
+            <div key={label} className="flex justify-between items-center py-2 border-b border-border last:border-0">
+              <span className="text-[11px] md:text-[12px] text-text-2">{label}</span>
+              <span className="font-dm-mono text-[11px] md:text-[12px] font-medium text-text">{String(value)}</span>
             </div>
           ))}
+          {trade.htf_trend && (
+            <div className="flex justify-between items-center py-2 border-b border-border last:border-0">
+              <span className="text-[11px] md:text-[12px] text-text-2">HTF Trend</span>
+              <span className="text-[11px] font-medium py-0.5 md:py-[3px] px-2 md:px-2.5 rounded-md font-dm-mono tracking-[0.04em]" style={{
+                background: /bull/i.test(trade.htf_trend) ? "var(--green-bg)" : /bear/i.test(trade.htf_trend) ? "var(--red-bg)" : "var(--amber-bg)",
+                color: /bull/i.test(trade.htf_trend) ? "var(--green)" : /bear/i.test(trade.htf_trend) ? "var(--red)" : "var(--amber)",
+                border: `1px solid ${/bull/i.test(trade.htf_trend) ? "var(--green-br,var(--green))" : /bear/i.test(trade.htf_trend) ? "var(--red-br,var(--red))" : "var(--amber-br,var(--amber))"}`,
+              }}>
+                {trade.htf_trend}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Psychology & Confluence */}
-      <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16, padding: "24px 28px", boxShadow: "var(--shadow)", marginBottom: 16 }}>
-        <div style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 16 }}>
+      <div className="bg-surface border border-border rounded-2xl p-4 md:p-6 shadow-[var(--shadow)] mb-4">
+        <div className="text-[10px] font-medium tracking-[0.12em] uppercase text-text-3 mb-4">
           Psixologiya &amp; Confluence
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           <div>
             {trade.mood && trade.mood.length > 0 && (
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 6 }}>Kayfiyat</div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              <div className="mb-3">
+                <div className="text-[11px] text-text-3 mb-1.5">Kayfiyat</div>
+                <div className="flex flex-wrap gap-1.5">
                   {trade.mood.map((m) => (
-                    <span key={m} style={{ padding: "5px 12px", borderRadius: 6, fontSize: 12, background: "var(--amber-bg)", color: "var(--amber)", border: "1px solid var(--amber-br)" }}>
+                    <span key={m} className="py-1 md:py-[5px] px-2.5 md:px-3 rounded-lg text-[11px] md:text-[12px] bg-amber-bg text-amber border border-amber-br">
                       {m}
                     </span>
                   ))}
@@ -170,57 +169,60 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
               </div>
             )}
             {trade.plan_adherence !== null && (
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 6 }}>Rejaga amal qilish</div>
-                <div style={{ display: "flex", gap: 4 }}>
+              <div className="mb-3">
+                <div className="text-[11px] text-text-3 mb-1.5">Rejaga amal qilish</div>
+                <div className="flex gap-1">
                   {[1, 2, 3, 4, 5].map((n) => (
-                    <span key={n} style={{ fontSize: 18, color: n <= (trade.plan_adherence ?? 0) ? "#f59e0b" : "var(--border-dark)" }}>★</span>
+                    <span key={n} className="text-[16px] md:text-[18px]" style={{ color: n <= (trade.plan_adherence ?? 0) ? "#f59e0b" : "var(--border-dark)" }}>★</span>
                   ))}
                 </div>
               </div>
             )}
             {trade.went_well && (
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 4 }}>Yaxshi qilganim</div>
-                <p style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.6 }}>{trade.went_well}</p>
+              <div className="mb-3">
+                <div className="text-[11px] text-text-3 mb-1">Yaxshi qilganim</div>
+                <p className="text-[12px] md:text-[13px] text-text leading-[1.6]">{trade.went_well}</p>
               </div>
             )}
             {trade.improve && (
               <div>
-                <div style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 4 }}>Yaxshilash kerak</div>
-                <p style={{ fontSize: 13, color: "var(--text)", lineHeight: 1.6 }}>{trade.improve}</p>
+                <div className="text-[11px] text-text-3 mb-1">Yaxshilash kerak</div>
+                <p className="text-[12px] md:text-[13px] text-text leading-[1.6]">{trade.improve}</p>
               </div>
             )}
           </div>
           <div>
             {trade.confluence && trade.confluence.length > 0 && (
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 6 }}>Confluence</div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              <div className="mb-3">
+                <div className="text-[11px] text-text-3 mb-1.5">Confluence</div>
+                <div className="flex flex-wrap gap-1.5">
                   {trade.confluence.map((c) => (
-                    <span key={c} style={{ padding: "5px 12px", borderRadius: 6, fontSize: 12, background: "var(--purple-bg)", color: "var(--purple)", border: "1px solid var(--purple-br)" }}>
+                    <span key={c} className="py-1 md:py-[5px] px-2.5 md:px-3 rounded-lg text-[11px] md:text-[12px] bg-purple-bg text-purple border border-purple-br">
                       {c}
                     </span>
                   ))}
                 </div>
               </div>
             )}
-            {trade.checklist && (
+            {trade.checklist && Object.keys(trade.checklist).length > 0 && (
               <div>
-                <div style={{ fontSize: 11, color: "var(--text-3)", marginBottom: 6 }}>Checklist</div>
-                {Object.entries(trade.checklist).map(([key, val]) => (
-                  <div key={key} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                    <div style={{
-                      width: 16, height: 16, borderRadius: 4,
-                      background: val ? "var(--green)" : "var(--surface2)",
-                      border: `1px solid ${val ? "var(--green)" : "var(--border-dark)"}`,
-                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                    }}>
-                      {val && <svg width="8" height="8" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                <div className="text-[11px] text-text-3 mb-2">Checklist</div>
+                {Object.entries(trade.checklist).map(([key, val]) => {
+                  const isNumericKey = /^\d+$/.test(key);
+                  if (isNumericKey) return null;
+                  return (
+                    <div key={key} className="flex items-center gap-2 mb-1.5">
+                      <div className="w-3.5 h-3.5 md:w-4 md:h-4 rounded-md flex-shrink-0" style={{
+                        background: val ? "var(--green)" : "var(--surface2)",
+                        border: `1px solid ${val ? "var(--green)" : "var(--border-dark)"}`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>
+                        {val && <svg width="7" height="7" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                      </div>
+                      <span className={`text-[11px] md:text-[12px] ${val ? "text-text" : "text-text-3"}`} style={{ textDecoration: val ? "none" : "line-through" }}>{key}</span>
                     </div>
-                    <span style={{ fontSize: 12, color: "var(--text-2)" }}>{key}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -229,31 +231,18 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
 
       {/* Delete Modal */}
       {showDeleteModal && (
-        <div style={{
-          position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
-          zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
-        }}>
-          <div style={{
-            background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16, padding: 28,
-            width: "100%", maxWidth: 440, boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
-          }}>
-            <div style={{ fontFamily: "'Fraunces',serif", fontSize: 20, fontWeight: 300, marginBottom: 12, color: "var(--text)" }}>
+        <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)] backdrop-blur-sm z-50 flex items-center justify-center p-4 md:p-6">
+          <div className="bg-surface border border-border rounded-2xl p-5 md:p-7 w-full max-w-[440px] shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
+            <div className="font-fraunces text-[17px] md:text-[20px] font-light mb-3 text-text">
               Tradeni o&apos;chirish
             </div>
-            <p style={{ fontSize: 13, color: "var(--text-2)", lineHeight: 1.6, marginBottom: 24 }}>
+            <p className="text-[12px] md:text-[13px] text-text-2 leading-[1.6] mb-6">
               <strong>{trade.asset}</strong> tradeni o&apos;chirmoqchimisiz? Bu amalni qaytarib bo&apos;lmaydi.
             </p>
-            <button onClick={deleteTrade} disabled={deleting} style={{
-              width: "100%", padding: 13, background: "var(--red)", color: "white", border: "none",
-              borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 14, fontWeight: 500,
-              cursor: deleting ? "not-allowed" : "pointer", opacity: deleting ? 0.6 : 1, marginBottom: 8,
-            }}>
+            <button onClick={deleteTrade} disabled={deleting} className="w-full py-3 md:py-3 bg-red text-white border-none rounded-lg font-dm-sans text-[13px] md:text-[14px] font-medium cursor-pointer disabled:not-allowed disabled:opacity-60 mb-2" style={{ opacity: deleting ? 0.6 : 1 }}>
               {deleting ? "O'chirilmoqda..." : "Ha, o'chirish"}
             </button>
-            <button onClick={() => setShowDeleteModal(false)} style={{
-              width: "100%", padding: 11, background: "none", color: "var(--text-2)", border: "none",
-              fontSize: 13, cursor: "pointer",
-            }}>
+            <button onClick={() => setShowDeleteModal(false)} className="w-full py-2.5 md:py-3 bg-none text-text-2 border-none text-[12px] md:text-[13px] cursor-pointer">
               Bekor qilish
             </button>
           </div>

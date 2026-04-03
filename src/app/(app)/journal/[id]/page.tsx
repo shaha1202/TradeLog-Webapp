@@ -1,17 +1,18 @@
 import { createClient } from "@/lib/supabase/server";
+import { getUserId, getCachedProfile } from "@/lib/supabase/auth";
 import { redirect, notFound } from "next/navigation";
 import type { Trade, Profile } from "@/types";
 import TradeDetailClient from "./TradeDetailClient";
 
 export default async function TradeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const userId = await getUserId();
+  if (!userId) redirect("/login");
 
-  const [{ data: trade }, { data: profile }] = await Promise.all([
-    supabase.from("trades").select("*").eq("id", id).eq("user_id", user.id).single(),
-    supabase.from("profiles").select("*").eq("id", user.id).single(),
+  const supabase = await createClient();
+  const [{ data: trade }, profile] = await Promise.all([
+    supabase.from("trades").select("*").eq("id", id).eq("user_id", userId).single(),
+    getCachedProfile(userId),
   ]);
 
   if (!trade) notFound();

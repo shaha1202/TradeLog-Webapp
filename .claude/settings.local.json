@@ -14,7 +14,16 @@
       "mcp__Claude_Preview__preview_start",
       "Read(//opt/homebrew/Cellar/node@22/22.22.2/lib/node_modules/npm/bin/**)",
       "Read(//opt/homebrew/Cellar/node@22/22.22.2/bin/**)",
-      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")"
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
+      "Bash(npx next:*)",
+      "Bash(export PATH=\"$HOME/.volta/bin:/usr/local/bin:/opt/homebrew/bin:$PATH\")",
+      "Bash(node node_modules/.bin/next build)",
+      "Bash(vercel --version)",
+      "Bash(gh --version)",
+      "Bash(ssh -T git@github.com)",
+      "Bash(mkdir -p ~/.ssh)",
+      "Bash(ssh-keyscan github.com)",
+      "Bash(~/.ssh/known_hosts)"
     ]
   }
 }

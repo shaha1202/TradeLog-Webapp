@@ -54,7 +54,6 @@ export default function StatsClient({ trades, profile }: { trades: Trade[]; prof
 
   const periodLabel = period === 7 ? "Bu hafta" : period === 30 ? "Bu oy" : period === 90 ? "So'nggi 3 oy" : "Bu yil";
 
-  // Reset AI insight when period changes
   useEffect(() => {
     setAiInsight(null);
     setInsightLoaded(false);
@@ -91,7 +90,6 @@ export default function StatsClient({ trades, profile }: { trades: Trade[]; prof
       .finally(() => setLoadingInsight(false));
   }
 
-  // P&L bar chart data (last N days)
   const chartData = useMemo(() => {
     const days: Record<string, number> = {};
     filtered.forEach((t) => {
@@ -105,69 +103,64 @@ export default function StatsClient({ trades, profile }: { trades: Trade[]; prof
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 32 }}>
+      <div className="flex items-start justify-between mb-6 md:mb-8">
         <div>
-          <h1 style={{ fontFamily: "'Fraunces',serif", fontSize: 32, fontWeight: 300, lineHeight: 1.1, letterSpacing: "-0.5px", color: "var(--text)" }}>
+          <h1 className="font-fraunces text-[26px] md:text-[32px] font-light leading-[1.1] tracking-[-0.5px] text-text">
             Statistika
           </h1>
-          <p style={{ fontSize: 13, color: "var(--text-3)", marginTop: 6 }}>{periodLabel}</p>
+          <p className="text-[12px] md:text-[13px] text-text-3 mt-1.5">{periodLabel}</p>
         </div>
       </div>
 
       {/* Period tabs */}
-      <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
+      <div className="flex gap-1.5 md:gap-2 mb-5 overflow-x-auto pb-1">
         {[
           { label: "Hafta", days: 7 },
           { label: "Oy", days: 30 },
           { label: "3 oy", days: 90 },
           { label: "Yil", days: 365 },
         ].map(({ label, days }) => (
-          <button key={days} onClick={() => setPeriod(days)} style={{
-            padding: "7px 16px", borderRadius: 7, fontSize: 12, fontWeight: 500, cursor: "pointer", transition: "all 0.15s",
-            border: `1px solid ${period === days ? "var(--text)" : "var(--border)"}`,
-            background: period === days ? "var(--text)" : "var(--surface)",
-            color: period === days ? "white" : "var(--text-2)",
-          }}>
+          <button key={days} onClick={() => setPeriod(days)} className={`px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-[11px] md:text-[12px] font-medium cursor-pointer transition-all whitespace-nowrap ${
+            period === days
+              ? "bg-text text-white border-text"
+              : "bg-surface text-text-2 border-border"
+          } border`}>
             {label}
           </button>
         ))}
       </div>
 
       {/* AI Insight */}
-      <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16, padding: "20px 24px", marginBottom: 20, boxShadow: "var(--shadow)" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: insightLoaded ? 16 : 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 36, height: 36, background: "var(--teal-bg)", border: "1px solid var(--teal-br)", borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+      <div className="bg-surface border border-border rounded-2xl p-4 md:p-5 lg:p-5 mb-5 shadow-[var(--shadow)]">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 md:w-9 md:h-9 bg-teal-bg border border-teal-br rounded-lg md:rounded-[9px] flex items-center justify-center flex-shrink-0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17H8v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z" stroke="var(--teal)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text)" }}>AI Coach</div>
-              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 1 }}>{periodLabel} statistikasi asosida</div>
+              <div className="text-[12px] md:text-[13px] font-medium text-text">AI Coach</div>
+              <div className="text-[10px] md:text-[11px] text-text-3 mt-0.5">{periodLabel} statistikasi asosida</div>
             </div>
           </div>
           {!insightLoaded && filtered.length > 0 && (
             <button
               onClick={fetchAiInsight}
               disabled={loadingInsight}
-              style={{
-                display: "flex", alignItems: "center", gap: 7, padding: "9px 18px",
-                background: loadingInsight ? "var(--surface2)" : "var(--teal)",
-                color: loadingInsight ? "var(--text-2)" : "white",
-                border: "none", borderRadius: 8, fontFamily: "'DM Sans',sans-serif",
-                fontSize: 12, fontWeight: 500, cursor: loadingInsight ? "not-allowed" : "pointer",
-                transition: "all 0.2s", opacity: loadingInsight ? 0.7 : 1,
-              }}
-            >
+              className={`flex items-center gap-1.5 md:gap-2 px-3.5 md:px-4 py-2 md:py-2.5 rounded-lg font-dm-sans text-[11px] md:text-[12px] font-medium cursor-pointer transition-all border-none disabled:not-allowed ${
+                loadingInsight
+                  ? "bg-surface2 text-text-2 opacity-70"
+                  : "bg-teal text-white"
+              }`}>
               {loadingInsight ? (
                 <>
-                  <span style={{ width: 14, height: 14, border: "2px solid var(--border)", borderTopColor: "var(--teal)", borderRadius: "50%", display: "inline-block", animation: "spin 0.7s linear infinite" }} />
+                  <span className="w-3 h-3 md:w-3.5 md:h-3.5 border-2 border-border border-t-teal rounded-full inline-block animate-spin-custom" />
                   Tahlil qilinmoqda...
                 </>
               ) : (
                 <>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                     <path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17H8v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   AI Tavsiya olish
@@ -178,67 +171,60 @@ export default function StatsClient({ trades, profile }: { trades: Trade[]; prof
           {insightLoaded && (
             <button
               onClick={() => { setAiInsight(null); setInsightLoaded(false); }}
-              style={{
-                padding: "6px 12px", background: "var(--surface2)", color: "var(--text-3)",
-                border: "1px solid var(--border)", borderRadius: 6, fontSize: 11, cursor: "pointer",
-              }}
-            >
+              className="px-2.5 md:px-3 py-1.5 md:py-2 bg-surface2 text-text-3 border border-border rounded-lg text-[10px] md:text-[11px] cursor-pointer">
               Yangilash
             </button>
           )}
         </div>
         {filtered.length === 0 ? (
-          <div style={{ fontSize: 13, color: "var(--text-3)", marginTop: 12 }}>Bu davrda tradelar yo&apos;q.</div>
+          <div className="text-[12px] md:text-[13px] text-text-3 mt-3">Bu davrda tradelar yo&apos;q.</div>
         ) : insightLoaded && aiInsight ? (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 4 }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 md:gap-2.5 mt-1">
             {/* General */}
-            <div style={{
-              gridColumn: "1 / -1", background: "var(--teal-bg)", border: "1px solid var(--teal-br)",
-              borderRadius: 12, padding: "16px 18px",
-            }}>
-              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--teal)", marginBottom: 8 }}>
+            <div className="col-span-1 md:col-span-2 bg-teal-bg border border-teal-br rounded-xl md:rounded-lg p-3 md:p-4">
+              <div className="text-[10px] font-semibold tracking-[0.1em] uppercase text-teal mb-2">
                 Umumiy baho
               </div>
-              <p style={{ fontSize: 13, lineHeight: 1.7, color: "var(--text)", margin: 0 }}>{aiInsight.general}</p>
+              <p className="text-[12px] md:text-[13px] leading-[1.7] text-text m-0">{aiInsight.general}</p>
             </div>
             {/* Strengths */}
-            <div style={{ background: "var(--green-bg)", border: "1px solid var(--green-br, var(--border))", borderRadius: 12, padding: "16px 18px" }}>
-              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--green)", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <div className="bg-green-bg border border-green-br rounded-lg p-3 md:p-4">
+              <div className="text-[10px] font-semibold tracking-[0.1em] uppercase text-green mb-2 flex items-center gap-1.5">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 To&apos;g&apos;ri qilganlar
               </div>
-              <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+              <ul className="m-0 p-0 list-none">
                 {aiInsight.strengths.map((s, i) => (
-                  <li key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 12, color: "var(--text)", lineHeight: 1.6, marginBottom: i < aiInsight.strengths.length - 1 ? 6 : 0 }}>
-                    <span style={{ color: "var(--green)", flexShrink: 0, marginTop: 2 }}>✓</span>
+                  <li key={i} className="flex gap-2 items-start text-[11px] md:text-[12px] text-text leading-[1.6] mb-1 md:mb-1.5 last:mb-0">
+                    <span className="text-green flex-shrink-0 mt-0.5">✓</span>
                     {s}
                   </li>
                 ))}
               </ul>
             </div>
             {/* Improvements */}
-            <div style={{ background: "var(--amber-bg)", border: "1px solid var(--amber-br, var(--border))", borderRadius: 12, padding: "16px 18px" }}>
-              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--amber)", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <div className="bg-amber-bg border border-amber-br rounded-lg p-3 md:p-4">
+              <div className="text-[10px] font-semibold tracking-[0.1em] uppercase text-amber mb-2 flex items-center gap-1.5">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 Yaxshilash kerak
               </div>
-              <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+              <ul className="m-0 p-0 list-none">
                 {aiInsight.improvements.map((s, i) => (
-                  <li key={i} style={{ display: "flex", gap: 8, alignItems: "flex-start", fontSize: 12, color: "var(--text)", lineHeight: 1.6, marginBottom: i < aiInsight.improvements.length - 1 ? 6 : 0 }}>
-                    <span style={{ color: "var(--amber)", flexShrink: 0, marginTop: 2 }}>→</span>
+                  <li key={i} className="flex gap-2 items-start text-[11px] md:text-[12px] text-text leading-[1.6] mb-1 md:mb-1.5 last:mb-0">
+                    <span className="text-amber flex-shrink-0 mt-0.5">→</span>
                     {s}
                   </li>
                 ))}
               </ul>
             </div>
             {/* Key Insight */}
-            <div style={{ gridColumn: "1 / -1", background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: 12, padding: "14px 18px", display: "flex", gap: 12, alignItems: "flex-start" }}>
-              <div style={{ width: 28, height: 28, borderRadius: 7, background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17H8v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z" stroke="var(--text-2)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <div className="col-span-1 md:col-span-2 bg-surface2 border border-border rounded-lg p-3 md:p-4 flex gap-3 items-start">
+              <div className="w-6 h-6 md:w-7 md:h-7 rounded-lg bg-surface border border-border flex items-center justify-center flex-shrink-0">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17H8v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z" stroke="var(--text-2)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 4 }}>Asosiy Insight</div>
-                <p style={{ fontSize: 13, lineHeight: 1.6, color: "var(--text)", margin: 0 }}>{aiInsight.insight}</p>
+                <div className="text-[10px] font-semibold tracking-[0.1em] uppercase text-text-3 mb-1">Asosiy Insight</div>
+                <p className="text-[12px] md:text-[13px] leading-[1.6] text-text m-0">{aiInsight.insight}</p>
               </div>
             </div>
           </div>
@@ -246,87 +232,85 @@ export default function StatsClient({ trades, profile }: { trades: Trade[]; prof
       </div>
 
       {/* P&L Chart */}
-      <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16, padding: 24, marginBottom: 20, boxShadow: "var(--shadow)" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-          <div style={{ fontSize: 12, color: "var(--text-3)" }}>P&amp;L dinamikasi</div>
-          <div style={{ fontSize: 18, fontWeight: 500, fontFamily: "'DM Mono',monospace", color: stats.totalPnl >= 0 ? "var(--green)" : "var(--red)" }}>
+      <div className="bg-surface border border-border rounded-2xl p-4 md:p-6 mb-5 shadow-[var(--shadow)]">
+        <div className="flex justify-between items-center mb-1">
+          <div className="text-[11px] md:text-[12px] text-text-3">P&amp;L dinamikasi</div>
+          <div className="text-[16px] md:text-[18px] font-medium font-dm-mono" style={{ color: stats.totalPnl >= 0 ? "var(--green)" : "var(--red)" }}>
             {formatPnl(stats.totalPnl, profile?.currency)}
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 100, margin: "16px 0 8px" }}>
+        <div className="flex items-end gap-1 h-20 md:h-24 mx-2 md:mx-4">
           {chartData.length === 0 ? (
-            <div style={{ fontSize: 13, color: "var(--text-3)", margin: "auto" }}>Ma&apos;lumot yo&apos;q</div>
+            <div className="text-[12px] md:text-[13px] text-text-3 mx-auto">Ma&apos;lumot yo&apos;q</div>
           ) : (
             chartData.map(({ date, pnl, height }) => (
-              <div key={date} title={`${date}: ${formatPnl(pnl)}`} style={{
-                flex: 1, height: `${height}px`, borderRadius: "2px 2px 0 0", minHeight: 4,
-                background: pnl >= 0 ? "var(--green)" : "var(--red)",
-                opacity: 0.8, cursor: "default", transition: "opacity 0.15s",
-              }} />
+              <div key={date} title={`${date}: ${formatPnl(pnl)}`} className="flex-1 min-h-[4px] rounded-t-sm opacity-80 cursor-default transition-opacity" style={{ height: `${height}%`, background: pnl >= 0 ? "var(--green)" : "var(--red)" }} />
             ))
           )}
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "var(--text-3)", fontFamily: "'DM Mono',monospace" }}>
+        <div className="flex justify-between text-[9px] md:text-[10px] text-text-3 font-dm-mono">
           <span>1</span><span>7</span><span>14</span><span>21</span><span>28</span>
         </div>
       </div>
 
       {/* Stat cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 24 }}>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-3 mb-6">
         {[
           { label: "Win rate", value: `${stats.winRate}%`, sub: `${stats.wins}W / ${stats.losses}L`, color: stats.winRate >= 50 ? "g" : stats.winRate >= 40 ? "" : "r" },
           { label: "Avg R:R", value: `${stats.avgRR.toFixed(2)}R`, color: stats.avgRR >= 2 ? "g" : stats.avgRR >= 1 ? "" : "r" },
           { label: "Profit factor", value: isFinite(stats.profitFactor) ? stats.profitFactor.toFixed(2) : "∞", color: stats.profitFactor >= 1.5 ? "g" : stats.profitFactor >= 1 ? "" : "r" },
           { label: "Jami trade", value: String(filtered.length), color: "" },
         ].map(({ label, value, sub, color }) => (
-          <div key={label} style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: "16px 18px", boxShadow: "var(--shadow)" }}>
-            <div style={{ fontSize: 11, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>{label}</div>
-            <div style={{ fontSize: 22, fontWeight: 500, fontFamily: "'DM Mono',monospace", letterSpacing: "-0.5px", color: color === "g" ? "var(--green)" : color === "r" ? "var(--red)" : "var(--text)" }}>
+          <div key={label} className="bg-surface border border-border rounded-xl p-3 md:p-4 shadow-[var(--shadow)]">
+            <div className="text-[10px] md:text-[11px] text-text-3 uppercase tracking-[0.08em] mb-2">{label}</div>
+            <div className={`text-[16px] md:text-[22px] font-medium font-dm-mono tracking-[-0.5px] ${
+              color === "g" ? "text-green" : color === "r" ? "text-red" : "text-text"
+            }`}>
               {value}
             </div>
-            {sub && <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 3 }}>{sub}</div>}
+            {sub && <div className="text-[10px] md:text-[11px] text-text-3 mt-1">{sub}</div>}
           </div>
         ))}
       </div>
 
       {/* Best/Worst + Asset breakdown */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16, padding: "24px 28px", boxShadow: "var(--shadow)" }}>
-          <div style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 16 }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-surface border border-border rounded-2xl p-4 md:p-6 shadow-[var(--shadow)]">
+          <div className="text-[10px] font-medium tracking-[0.12em] uppercase text-text-3 mb-4">
             Eng yaxshi / yomon
           </div>
           {[
             { label: "Best trade", trade: stats.best, color: "var(--green)" },
             { label: "Worst trade", trade: stats.worst, color: "var(--red)" },
           ].map(({ label, trade: t, color }) => (
-            <div key={label} style={{ background: "var(--surface2)", borderRadius: 10, padding: 14, marginBottom: 10 }}>
-              <div style={{ fontSize: 10, color, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>{label}</div>
-              <div style={{ fontSize: 15, fontWeight: 500, color: "var(--text)" }}>{t?.asset ?? "—"}</div>
-              <div style={{ fontSize: 14, fontWeight: 500, color, fontFamily: "'DM Mono',monospace", marginTop: 2 }}>
+            <div key={label} className="bg-surface2 rounded-lg p-3 md:p-3.5 mb-2.5 last:mb-0">
+              <div className="text-[10px] uppercase tracking-[0.1em] mb-1.5" style={{ color }}>{label}</div>
+              <div className="text-[13px] md:text-[15px] font-medium text-text">{t?.asset ?? "—"}</div>
+              <div className="text-[13px] md:text-[14px] font-medium font-dm-mono mt-0.5" style={{ color }}>
                 {t?.pnl !== undefined ? formatPnl(t.pnl ?? null, profile?.currency) : "—"}
               </div>
             </div>
           ))}
         </div>
 
-        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 16, padding: "24px 28px", boxShadow: "var(--shadow)" }}>
-          <div style={{ fontSize: 10, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--text-3)", marginBottom: 16 }}>
+        <div className="bg-surface border border-border rounded-2xl p-4 md:p-6 shadow-[var(--shadow)]">
+          <div className="text-[10px] font-medium tracking-[0.12em] uppercase text-text-3 mb-4">
             Asset breakdown
           </div>
           {Object.keys(stats.byAsset).length === 0 ? (
-            <div style={{ color: "var(--text-3)", fontSize: 13 }}>Ma&apos;lumot yo&apos;q</div>
+            <div className="text-text-3 text-[12px] md:text-[13px]">Ma&apos;lumot yo&apos;q</div>
           ) : (
             Object.entries(stats.byAsset)
               .sort((a, b) => b[1].count - a[1].count)
               .map(([asset, data]) => (
-                <div key={asset} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid var(--border)" }}>
+                <div key={asset} className="flex items-center justify-between py-3 border-b border-border last:border-0">
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text)" }}>{asset}</div>
-                    <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 2 }}>
+                    <div className="text-[12px] md:text-[13px] font-medium text-text">{asset}</div>
+                    <div className="text-[10px] md:text-[11px] text-text-3 mt-0.5">
                       {data.count} trade · {Math.round((data.wins / data.count) * 100)}% WR
                     </div>
                   </div>
-                  <div style={{ fontFamily: "'DM Mono',monospace", fontSize: 13, fontWeight: 500, color: data.pnl >= 0 ? "var(--green)" : "var(--red)" }}>
+                  <div className="font-dm-mono text-[12px] md:text-[13px] font-medium" style={{ color: data.pnl >= 0 ? "var(--green)" : "var(--red)" }}>
                     {formatPnl(data.pnl, profile?.currency)}
                   </div>
                 </div>

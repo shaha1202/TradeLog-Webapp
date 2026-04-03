@@ -5,7 +5,7 @@
       "name": "TradeLog Dev",
       "runtimeExecutable": "/opt/homebrew/bin/node",
       "runtimeArgs": ["node_modules/.bin/next", "dev"],
-      "port": 3000
+      "autoPort": true
     }
   ]
 }
