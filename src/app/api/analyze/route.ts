@@ -69,7 +69,8 @@ Respond ONLY in JSON:
     const parsed = JSON.parse(jsonMatch[0]);
     return NextResponse.json(parsed);
   } catch (error) {
-    console.error("Analyze error:", error);
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error("Analyze error:", msg);
     return NextResponse.json({ error: "Analysis failed" }, { status: 500 });
   }
 }
