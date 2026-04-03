@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import type { Trade, Profile } from "@/types";
 import { formatPnl, formatTime } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n";
@@ -37,7 +37,7 @@ function StatCard({ label, value, colorClass }: { label: string; value: string; 
   );
 }
 
-function TradeCard({ trade, feedbackEnabled }: { trade: Trade; feedbackEnabled: boolean }) {
+function TradeCard({ trade, feedbackEnabled, translatedFeedback }: { trade: Trade; feedbackEnabled: boolean; translatedFeedback?: string }) {
   const pnlColor = trade.pnl === null ? "" : trade.pnl > 0 ? "var(--green)" : trade.pnl < 0 ? "var(--red)" : "var(--text-2)";
   const dirColor = trade.direction === "LONG" ? { bg: "var(--green-bg)", color: "var(--green)" } : trade.direction === "SHORT" ? { bg: "var(--red-bg)", color: "var(--red)" } : { bg: "var(--surface2)", color: "var(--text-2)" };
   const resStyle = trade.result === "win" ? { bg: "var(--green-bg)", color: "var(--green)" } : trade.result === "loss" ? { bg: "var(--red-bg)", color: "var(--red)" } : { bg: "var(--amber-bg)", color: "var(--amber)" };
@@ -71,7 +71,7 @@ function TradeCard({ trade, feedbackEnabled }: { trade: Trade; feedbackEnabled: 
         </div>
         {feedbackEnabled && trade.ai_feedback && (
           <div className="text-[11px] md:text-[12px] text-text-2 leading-[1.55] p-2 md:p-3 bg-teal-bg rounded-lg border-l-2 border-teal mt-2">
-            {trade.ai_feedback.slice(0, 120)}{trade.ai_feedback.length > 120 ? "..." : ""}
+            {(() => { const txt = translatedFeedback ?? trade.ai_feedback; return txt.slice(0, 120) + (txt.length > 120 ? "..." : ""); })()}
           </div>
         )}
         <div className="text-[10px] md:text-[11px] text-text-3 font-dm-mono mt-2">{formatTime(trade.created_at)}</div>
@@ -89,6 +89,33 @@ interface Props {
 export default function JournalClient({ trades, profile, todayStats }: Props) {
   const { t, lang } = useLanguage();
   const j = t.journal;
+  const [translatedFeedbacks, setTranslatedFeedbacks] = useState<Record<string, string>>({});
+  const translateCacheRef = useRef<Record<string, Record<string, string>>>({});
+
+  useEffect(() => {
+    if (lang === "uz") { setTranslatedFeedbacks({}); return; }
+    const cached = translateCacheRef.current[lang];
+    if (cached) { setTranslatedFeedbacks(cached); return; }
+
+    const withFeedback = trades.filter((tr) => tr.ai_feedback);
+    if (withFeedback.length === 0) return;
+
+    fetch("/api/translate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ texts: withFeedback.map((tr) => tr.ai_feedback!), lang }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.translations) {
+          const map: Record<string, string> = {};
+          withFeedback.forEach((tr, i) => { map[tr.id] = data.translations[i]; });
+          translateCacheRef.current[lang] = map;
+          setTranslatedFeedbacks(map);
+        }
+      })
+      .catch(() => {});
+  }, [lang, trades]);
 
   const dateStr = new Date().toLocaleDateString(
     lang === "ru" ? "ru-RU" : lang === "en" ? "en-US" : "uz-UZ",
@@ -142,7 +169,7 @@ export default function JournalClient({ trades, profile, todayStats }: Props) {
               <div className="text-[10px] md:text-[11px] font-medium text-text-3 uppercase tracking-[0.1em] mb-2.5">{dateKey}</div>
               <div className="flex flex-col gap-2">
                 {(grouped[dateKey] as Trade[]).map((trade) => (
-                  <TradeCard key={trade.id} trade={trade} feedbackEnabled={profile?.feedback_enabled ?? true} />
+                  <TradeCard key={trade.id} trade={trade} feedbackEnabled={profile?.feedback_enabled ?? true} translatedFeedback={translatedFeedbacks[trade.id]} />
                 ))}
               </div>
             </div>

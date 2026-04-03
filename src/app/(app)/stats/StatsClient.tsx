@@ -19,7 +19,7 @@ import {
 import { BalanceCurveChart, DailyPnlChart, ConfluenceChart } from "./StatsCharts";
 
 export default function StatsClient({ trades, profile }: { trades: Trade[]; profile: Profile | null }) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const st = t.stats;
   const [period, setPeriod] = useState(7);
   const [aiInsight, setAiInsight] = useState<{
@@ -48,7 +48,7 @@ export default function StatsClient({ trades, profile }: { trades: Trade[]; prof
   useEffect(() => {
     setAiInsight(null);
     setInsightLoaded(false);
-  }, [period]);
+  }, [period, lang]);
 
   function fetchAiInsight() {
     if (filtered.length === 0 || loadingInsight) return;
@@ -81,6 +81,7 @@ export default function StatsClient({ trades, profile }: { trades: Trade[]; prof
         topMood: stats.topMood,
         assetSummary,
         avgAdherence: stats.avgAdherence.toFixed(1),
+        lang,
       }),
     })
       .then((r) => r.json())

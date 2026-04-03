@@ -27,7 +27,7 @@ const SESSIONS = ["Asian", "London", "New York", "London + NY"];
 
 export default function NewTradePage() {
   const router = useRouter();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const nt = t.newTrade;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -213,6 +213,7 @@ export default function NewTradePage() {
           mimeType: file.type,
           balance: profile?.account_balance,
           risk: profile?.default_risk,
+          lang,
         }),
       });
 
@@ -237,7 +238,7 @@ export default function NewTradePage() {
       setScanning(false);
       setFormVisible(true);
     }
-  }, [profile]);
+  }, [profile, lang]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
