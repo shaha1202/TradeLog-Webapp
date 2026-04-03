@@ -231,9 +231,12 @@ export default function NewTradePage() {
         if (data.narrative) { setNarrative(data.narrative); newAiFields.add("narrative"); }
         if (data.feedback) { setFeedback(data.feedback); newAiFields.add("feedback"); }
         setAiFields(newAiFields);
+      } else {
+        setToast({ show: true, message: nt.analyzeError });
       }
     } catch (err) {
       console.error("AI analysis failed:", err);
+      setToast({ show: true, message: nt.analyzeError });
     } finally {
       setScanning(false);
       setFormVisible(true);

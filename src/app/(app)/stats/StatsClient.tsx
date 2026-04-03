@@ -16,7 +16,7 @@ import {
   calcChecklistPerformance,
   calcAssetPerformance,
 } from "./StatsCalculations";
-import { BalanceCurveChart, DailyPnlChart, ConfluenceChart } from "./StatsCharts";
+import { BalanceCurveChart, DailyPnlChart, ConfluenceChart, ChecklistPieChart } from "./StatsCharts";
 
 export default function StatsClient({ trades, profile }: { trades: Trade[]; profile: Profile | null }) {
   const { t, lang } = useLanguage();
@@ -431,54 +431,10 @@ export default function StatsClient({ trades, profile }: { trades: Trade[]; prof
             <div className="bg-surface border border-border rounded-2xl p-4 md:p-6 mb-5 shadow-[var(--shadow)]">
               <div className="text-[10px] font-medium tracking-[0.12em] uppercase text-text-3 mb-2">{st.checklistImpact}</div>
               <p className="text-[11px] text-text-3 mb-4">{st.checklistImpactSub}</p>
-              <div className="space-y-2">
-                {checklistPerf.map((item) => {
-                  const hasBoth = item.checkedCount >= 2 && item.uncheckedCount >= 2;
-                  return (
-                    <div key={item.item} className="bg-surface2 rounded-lg p-3 md:p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="text-[12px] md:text-[13px] font-medium text-text">{item.item}</div>
-                        {hasBoth && (
-                          <div
-                            className="text-[11px] md:text-[12px] font-medium font-dm-mono px-2 py-0.5 rounded"
-                            style={{
-                              color: item.winRateDelta >= 0 ? "var(--green)" : "var(--red)",
-                              backgroundColor: item.winRateDelta >= 0 ? "var(--green-bg)" : "var(--red-bg)",
-                            }}
-                          >
-                            {item.winRateDelta > 0 ? "+" : ""}
-                            {item.winRateDelta}pp
-                          </div>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <div className="text-[10px] text-text-3 mb-1">{st.checked} ({item.checkedCount})</div>
-                          <div
-                            className="font-dm-mono text-[14px] md:text-[16px] font-medium"
-                            style={{
-                              color: item.checkedWinRate !== null ? (item.checkedWinRate >= 50 ? "var(--green)" : "var(--red)") : "var(--text-3)",
-                            }}
-                          >
-                            {item.checkedWinRate !== null ? `${item.checkedWinRate}%` : "—"}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-[10px] text-text-3 mb-1">{st.unchecked} ({item.uncheckedCount})</div>
-                          <div
-                            className="font-dm-mono text-[14px] md:text-[16px] font-medium"
-                            style={{
-                              color: item.uncheckedWinRate !== null ? (item.uncheckedWinRate >= 50 ? "var(--green)" : "var(--red)") : "var(--text-3)",
-                            }}
-                          >
-                            {item.uncheckedWinRate !== null ? `${item.uncheckedWinRate}%` : "—"}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              <ChecklistPieChart
+                data={checklistPerf}
+                labels={{ checked: st.checked, unchecked: st.unchecked, tradeCount: st.tradeCount }}
+              />
             </div>
           )}
         </>

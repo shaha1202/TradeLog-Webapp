@@ -182,6 +182,7 @@ const T = {
       assetRequired: "Enter asset name",
       saveError: "Error occurred: ",
       freeLimitReached: "Free plan: 30 trade limit. Upgrade to Pro!",
+      analyzeError: "AI analysis failed. Fill in the fields manually.",
     },
     tradeDetail: {
       back: "Back",
@@ -372,6 +373,7 @@ const T = {
       assetRequired: "Asset nomini kiriting",
       saveError: "Xato yuz berdi: ",
       freeLimitReached: "Free tarif: 30 ta trade limiti. Pro-ga o'ting!",
+      analyzeError: "AI tahlili amalga oshmadi. Maydonlarni qo'lda to'ldiring.",
     },
     tradeDetail: {
       back: "Orqaga",
@@ -562,6 +564,7 @@ const T = {
       assetRequired: "Введите название актива",
       saveError: "Произошла ошибка: ",
       freeLimitReached: "Free план: лимит 30 сделок. Перейдите на Pro!",
+      analyzeError: "AI анализ не удался. Заполните поля вручную.",
     },
     tradeDetail: {
       back: "Назад",

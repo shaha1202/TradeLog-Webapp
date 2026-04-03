@@ -11,6 +11,8 @@ import {
   ResponsiveContainer,
   Cell,
   CartesianGrid,
+  PieChart,
+  Pie,
 } from "recharts";
 
 function getColors() {
@@ -185,5 +187,117 @@ export function ConfluenceChart({ data }: ConfluenceChartProps) {
         </Bar>
       </BarChart>
     </ResponsiveContainer>
+  );
+}
+
+// --- Checklist Pie Chart (all items in one chart) ---
+
+const PIE_COLORS = [
+  "#2d6a4f", "#0f766e", "#b45309", "#7c3aed", "#dc2626",
+  "#0369a1", "#4d7c0f", "#be185d", "#6d28d9", "#0e7490",
+  "#a16207", "#15803d", "#9f1239", "#1d4ed8", "#c2410c",
+];
+
+interface ChecklistPieData {
+  item: string;
+  checkedCount: number;
+  uncheckedCount: number;
+  checkedWinRate: number | null;
+  uncheckedWinRate: number | null;
+  winRateDelta: number;
+  checkedPnl: number;
+}
+
+interface ChecklistPieChartProps {
+  data: ChecklistPieData[];
+  labels: { checked: string; unchecked: string; tradeCount: string };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function CustomTooltip({ active, payload, labels: tipLabels }: any) {
+  if (!active || !payload?.length) return null;
+  const d = payload[0].payload as ChecklistPieData & { percent: number };
+  return (
+    <div
+      style={{
+        backgroundColor: "var(--surface)",
+        border: "1px solid var(--border)",
+        borderRadius: "8px",
+        padding: "8px 12px",
+        fontSize: "12px",
+        fontFamily: "DM Mono",
+        boxShadow: "var(--shadow)",
+      }}
+    >
+      <div style={{ fontWeight: 600, marginBottom: 4, fontFamily: "DM Sans" }}>{d.item}</div>
+      <div style={{ color: "var(--text-2)", fontSize: "11px" }}>{tipLabels.checked}: {d.checkedCount} ({d.checkedWinRate ?? "—"}%)</div>
+      <div style={{ color: "var(--text-2)", fontSize: "11px" }}>{tipLabels.unchecked}: {d.uncheckedCount} ({d.uncheckedWinRate ?? "—"}%)</div>
+      <div style={{ color: d.winRateDelta >= 0 ? "var(--green)" : "var(--red)", fontSize: "11px", marginTop: 2 }}>
+        {d.winRateDelta > 0 ? "+" : ""}{d.winRateDelta}pp
+      </div>
+    </div>
+  );
+}
+
+export function ChecklistPieChart({ data, labels }: ChecklistPieChartProps) {
+  if (data.length === 0) return null;
+
+  const totalChecks = data.reduce((s, d) => s + d.checkedCount, 0);
+  const pieData = data.map((d) => ({
+    ...d,
+    value: d.checkedCount,
+    percent: totalChecks > 0 ? Math.round((d.checkedCount / totalChecks) * 100) : 0,
+  }));
+
+  return (
+    <div className="flex flex-col md:flex-row items-center md:items-start gap-4 md:gap-6">
+      <div style={{ width: 200, height: 200, flexShrink: 0 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={pieData}
+              cx="50%"
+              cy="50%"
+              innerRadius={50}
+              outerRadius={90}
+              dataKey="value"
+              stroke="none"
+              startAngle={90}
+              endAngle={-270}
+              paddingAngle={2}
+            >
+              {pieData.map((_, i) => (
+                <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} opacity={0.85} />
+              ))}
+            </Pie>
+            <Tooltip content={<CustomTooltip labels={labels} />} />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="flex-1 w-full">
+        <div className="space-y-2">
+          {pieData.map((d, i) => (
+            <div key={d.item} className="flex items-center gap-2.5">
+              <div
+                className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
+                style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }}
+              />
+              <div className="flex-1 flex items-center justify-between">
+                <span className="text-[11px] md:text-[12px] text-text font-medium truncate">{d.item}</span>
+                <div className="flex items-center gap-3 ml-2 flex-shrink-0">
+                  <span className="text-[10px] md:text-[11px] text-text-3">{d.checkedCount} {labels.tradeCount}</span>
+                  <span
+                    className="text-[11px] md:text-[12px] font-dm-mono font-medium"
+                    style={{ color: d.winRateDelta >= 0 ? "var(--green)" : "var(--red)" }}
+                  >
+                    {d.winRateDelta > 0 ? "+" : ""}{d.winRateDelta}pp
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
