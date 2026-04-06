@@ -1,6 +1,12 @@
+"use client";
+
 import Link from "next/link";
+import { useLanguage } from "@/lib/i18n";
 
 export function Footer() {
+  const { t } = useLanguage();
+  const l = t.landing;
+
   return (
     <footer className="border-t border-border">
       <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -35,37 +41,37 @@ export function Footer() {
             href="#features"
             className="text-xs text-text-3 hover:text-text transition-colors font-dm-sans"
           >
-            Features
+            {l.features}
           </a>
           <a
             href="#pricing"
             className="text-xs text-text-3 hover:text-text transition-colors font-dm-sans"
           >
-            Pricing
+            {l.pricing}
           </a>
           <a
             href="#story"
             className="text-xs text-text-3 hover:text-text transition-colors font-dm-sans"
           >
-            About
+            {l.about}
           </a>
           <Link
             href="/privacy"
             className="text-xs text-text-3 hover:text-text transition-colors font-dm-sans"
           >
-            Privacy Policy
+            {l.privacyPolicy}
           </Link>
           <Link
             href="/terms"
             className="text-xs text-text-3 hover:text-text transition-colors font-dm-sans"
           >
-            Terms of Service
+            {l.termsOfService}
           </Link>
           <Link
             href="/login"
             className="text-xs text-text-3 hover:text-text transition-colors font-dm-sans"
           >
-            Sign in
+            {l.signIn}
           </Link>
         </div>
       </div>

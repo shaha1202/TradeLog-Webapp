@@ -9,6 +9,7 @@ interface PricingCardProps {
   features: string[];
   cta: string;
   highlighted?: boolean;
+  popular?: string;
 }
 
 export function PricingCard({
@@ -19,6 +20,7 @@ export function PricingCard({
   features,
   cta,
   highlighted = false,
+  popular = "Popular",
 }: PricingCardProps) {
   return (
     <div
@@ -39,7 +41,7 @@ export function PricingCard({
           </span>
           {highlighted && (
             <span className="text-xs font-dm-mono bg-teal text-white px-2 py-0.5 rounded-full">
-              Popular
+              {popular}
             </span>
           )}
         </div>
