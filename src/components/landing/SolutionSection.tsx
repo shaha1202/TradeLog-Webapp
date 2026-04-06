@@ -1,33 +1,6 @@
-const solutions = [
-  {
-    label: "01",
-    title: "Log a trade in seconds",
-    description:
-      "Upload your chart screenshot. AI fills in asset, entry, SL, TP, and timeframe instantly. Add a note and you're done.",
-    accent: "teal",
-  },
-  {
-    label: "02",
-    title: "Structured input, no spreadsheet",
-    description:
-      "Every trade captures what matters: direction, R:R, session, mood, plan adherence. Always consistent. Always searchable.",
-    accent: "purple",
-  },
-  {
-    label: "03",
-    title: "Instant stats after every session",
-    description:
-      "P&L, win rate, average R:R — updated automatically. Know your edge after every session, not at the end of the month.",
-    accent: "green",
-  },
-  {
-    label: "04",
-    title: "Notes without friction",
-    description:
-      "Went well, needs improvement. Capture your thinking in two fields. No essays. No overwhelm. Just clarity.",
-    accent: "amber",
-  },
-];
+"use client";
+
+import { useLanguage } from "@/lib/i18n";
 
 const accentClasses: Record<string, { bg: string; text: string; border: string }> = {
   teal: { bg: "bg-teal-bg", text: "text-teal", border: "border-teal-br" },
@@ -37,16 +10,26 @@ const accentClasses: Record<string, { bg: string; text: string; border: string }
 };
 
 export function SolutionSection() {
+  const { t } = useLanguage();
+  const l = t.landing;
+
+  const solutions = [
+    { label: "01", title: l.solution1Title, description: l.solution1Desc, accent: "teal" },
+    { label: "02", title: l.solution2Title, description: l.solution2Desc, accent: "purple" },
+    { label: "03", title: l.solution3Title, description: l.solution3Desc, accent: "green" },
+    { label: "04", title: l.solution4Title, description: l.solution4Desc, accent: "amber" },
+  ];
+
   return (
     <section className="max-w-6xl mx-auto px-6 py-20">
       <div className="max-w-md mb-12 mx-auto text-center">
         <p className="text-xs font-dm-mono text-text-3 uppercase tracking-widest mb-3">
-          The Solution
+          {l.solutionLabel}
         </p>
         <h2 className="font-fraunces font-light text-3xl text-text leading-snug">
-          TradeLog removes every reason
+          {l.solutionH1}
           <br />
-          not to journal.
+          {l.solutionH2}
         </h2>
       </div>
 
