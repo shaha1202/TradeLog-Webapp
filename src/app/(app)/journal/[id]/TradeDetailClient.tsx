@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { Trade, Profile } from "@/types";
 import { formatPnl, formatDate, formatTime } from "@/lib/utils";
@@ -139,15 +140,27 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
           <div className="bg-teal-bg border border-teal-br border-l-[3px] border-teal rounded-r-lg py-2 md:py-3 px-3 md:px-4 text-[12px] md:text-[13px] leading-[1.7] text-text mb-3">
             {translatedNarrative ?? trade.ai_narrative ?? "—"}
           </div>
-          {profile?.feedback_enabled && trade.ai_feedback && (
-            <div className="bg-amber-bg border border-amber-br border-l-[3px] border-amber rounded-r-lg py-2 md:py-3 px-3 md:px-4 text-[12px] md:text-[13px] leading-[1.7] text-text">
-              <div className="text-[10px] font-medium tracking-[0.1em] uppercase text-amber mb-1.5 flex items-center gap-1.5">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17H8v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                AI Feedback
+          {trade.ai_feedback && (
+            <div className="relative">
+              <div className={`bg-amber-bg border border-amber-br border-l-[3px] border-amber rounded-r-lg py-2 md:py-3 px-3 md:px-4 text-[12px] md:text-[13px] leading-[1.7] text-text ${
+                profile?.plan === "free" ? "blur-sm select-none pointer-events-none" : ""
+              } ${!profile?.feedback_enabled && profile?.plan !== "free" ? "hidden" : ""}`}>
+                <div className="text-[10px] font-medium tracking-[0.1em] uppercase text-amber mb-1.5 flex items-center gap-1.5">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17H8v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  AI Feedback
+                </div>
+                {translatedFeedback ?? trade.ai_feedback}
               </div>
-              {translatedFeedback ?? trade.ai_feedback}
+              {profile?.plan === "free" && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                  <span className="text-[10px] bg-teal text-white px-2 py-0.5 rounded-full font-dm-mono font-medium">Pro</span>
+                  <Link href="/settings" className="text-[11px] text-text-2 font-dm-sans hover:text-text transition-colors">
+                    Pro&apos;ga o&apos;tish →
+                  </Link>
+                </div>
+              )}
             </div>
           )}
         </div>

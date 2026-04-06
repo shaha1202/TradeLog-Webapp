@@ -199,6 +199,30 @@ export function calcChecklistPerformance(trades: Trade[]) {
   return results.sort((a, b) => b.winRateDelta - a.winRateDelta);
 }
 
+// --- Mood / Psychology Performance ---
+
+export function calcMoodPerformance(trades: Trade[]) {
+  const moods: Record<string, { count: number; wins: number; pnl: number }> = {};
+  trades.forEach((t) => {
+    (t.mood ?? []).forEach((m) => {
+      if (!moods[m]) moods[m] = { count: 0, wins: 0, pnl: 0 };
+      moods[m].count++;
+      if (t.result === "win") moods[m].wins++;
+      moods[m].pnl += t.pnl ?? 0;
+    });
+  });
+  return Object.entries(moods)
+    .filter(([, d]) => d.count >= 1)
+    .map(([mood, d]) => ({
+      mood,
+      count: d.count,
+      wins: d.wins,
+      winRate: Math.round((d.wins / d.count) * 100),
+      pnl: parseFloat(d.pnl.toFixed(2)),
+    }))
+    .sort((a, b) => b.pnl - a.pnl);
+}
+
 // --- Asset Performance (enhanced) ---
 
 export function calcAssetPerformance(trades: Trade[]) {

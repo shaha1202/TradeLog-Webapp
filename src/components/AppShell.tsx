@@ -8,10 +8,12 @@ import { useMemo } from "react";
 export default function AppShell({
   profile,
   trades,
+  totalTradeCount,
   children,
 }: {
   profile: Profile | null;
   trades: Trade[];
+  totalTradeCount: number;
   children: React.ReactNode;
 }) {
   const todayStats = useMemo(() => {
@@ -35,7 +37,7 @@ export default function AppShell({
     <div className="min-h-screen">
       {/* Desktop layout with sidebar */}
       <div className="hidden md:grid md:grid-cols-[260px_1fr] min-h-screen">
-        <Sidebar profile={profile} stats={todayStats} />
+        <Sidebar profile={profile} stats={todayStats} totalTradeCount={totalTradeCount} />
         <main className="px-6 md:px-8 lg:px-12 py-6 md:py-10 w-full max-w-[960px]">
           {children}
         </main>

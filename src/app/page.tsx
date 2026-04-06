@@ -1,4 +1,14 @@
+import type { Metadata } from "next";
 import { Navbar } from "@/components/landing/Navbar";
+
+export const metadata: Metadata = {
+  title: "TradeLog — AI-Powered Trading Journal for Forex, Crypto & Stocks",
+  description:
+    "Track every trade, analyze patterns, and improve your trading performance with AI-powered insights. Free trading journal built for forex, crypto, and stock traders.",
+  alternates: {
+    canonical: "https://gettradelog.com",
+  },
+};
 import { Hero } from "@/components/landing/Hero";
 import { ProblemSection } from "@/components/landing/ProblemSection";
 import { SolutionSection } from "@/components/landing/SolutionSection";

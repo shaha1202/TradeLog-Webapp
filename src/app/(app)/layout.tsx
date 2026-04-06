@@ -17,17 +17,21 @@ export default async function AppLayout({
   todayStart.setHours(0, 0, 0, 0);
 
   const supabase = await createClient();
-  const [profile, todayTradesResult] = await Promise.all([
+  const [profile, todayTradesResult, totalCountResult] = await Promise.all([
     getCachedProfile(user.id),
     supabase.from("trades")
       .select("id,pnl,result,rr,created_at")
       .eq("user_id", user.id)
       .gte("created_at", todayStart.toISOString()),
+    supabase.from("trades")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id),
   ]);
   const { data: todayTrades } = todayTradesResult;
+  const totalTradeCount = totalCountResult.count ?? 0;
 
   return (
-    <AppShell profile={profile as Profile | null} trades={(todayTrades ?? []) as Trade[]}>
+    <AppShell profile={profile as Profile | null} trades={(todayTrades ?? []) as Trade[]} totalTradeCount={totalTradeCount}>
       {children}
     </AppShell>
   );

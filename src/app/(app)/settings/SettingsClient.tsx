@@ -409,21 +409,16 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
 
             {modal === "plan" && (
               <>
-                <div className="font-fraunces text-[17px] md:text-[20px] font-light mb-5 text-text">{s.selectPlan}</div>
-                {[
-                  { name: s.proMonthly, price: "$9.9/oy", desc: "Cheksiz tradelar", key: "monthly" },
-                  { name: s.proQuarterly, price: "$24/3 oy", desc: "20% tejash · Cheksiz tradelar", key: "quarterly" },
-                ].map(({ name, price, desc, key }) => (
-                  <div key={key} className="bg-surface2 border border-border rounded-lg p-3 md:p-4 mb-2.5 cursor-pointer transition-colors" onClick={() => handleStripeCheckout(
-                    key === "monthly"
-                      ? process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID ?? ""
-                      : process.env.NEXT_PUBLIC_STRIPE_QUARTERLY_PRICE_ID ?? ""
-                  )}>
-                    <div className="font-medium text-[13px] md:text-[14px] text-text">{name}</div>
-                    <div className="text-[12px] md:text-[13px] text-teal font-dm-mono mt-1">{price}</div>
-                    <div className="text-[11px] md:text-[12px] text-text-3 mt-0.5">{desc}</div>
-                  </div>
-                ))}
+                <div className="font-fraunces text-[17px] md:text-[20px] font-light mb-2 text-text">{s.selectPlan}</div>
+                <p className="text-[11px] md:text-[12px] text-text-3 mb-5 font-dm-sans">{s.freeDesc}</p>
+                <div
+                  className="bg-teal-bg border border-teal-br rounded-lg p-3 md:p-4 mb-2.5 cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => handleStripeCheckout(process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID ?? "")}
+                >
+                  <div className="font-medium text-[13px] md:text-[14px] text-text">{s.proMonthly}</div>
+                  <div className="text-[15px] md:text-[16px] text-teal font-dm-mono font-medium mt-1">$14<span className="text-[12px] font-normal">/oy</span></div>
+                  <div className="text-[11px] md:text-[12px] text-text-3 mt-0.5">Cheksiz tradelar · Chuqur AI Feedback · Ekspert statistika</div>
+                </div>
                 <button onClick={() => setModal(null)} className="w-full py-2.5 bg-none text-text-2 border-none text-[12px] md:text-[13px] cursor-pointer mt-2">{s.cancel}</button>
               </>
             )}

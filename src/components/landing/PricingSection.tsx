@@ -4,47 +4,48 @@ export function PricingSection() {
   return (
     <section id="pricing" className="bg-surface2 border-y border-border">
       <div className="max-w-6xl mx-auto px-6 py-20">
-        <div className="max-w-md mb-12">
+        <div className="max-w-md mb-12 mx-auto text-center">
           <p className="text-xs font-dm-mono text-text-3 uppercase tracking-widest mb-3">
-            Pricing
+            Narxlar
           </p>
           <h2 className="font-fraunces font-light text-3xl text-text leading-snug">
-            Start free.
+            Sodda narxlar,
             <br />
-            Upgrade when you&apos;re ready.
+            maksimal natija.
           </h2>
+          <p className="text-sm text-text-2 font-dm-sans mt-3 leading-relaxed">
+            Boshlash bepul, professional darajaga chiqish esa juda oson.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
           <PricingCard
             plan="free"
             name="Free"
-            price="$0"
-            description="Everything you need to start journaling consistently."
+            price="Bepul"
+            description="Jurnallashtirishni boshlash uchun zarur bo'lgan hamma narsa."
             features={[
-              "Unlimited trade entries",
-              "Daily stats (P&L, win rate, R:R)",
-              "Journal history",
-              "Trade notes & reflection",
-              "Light & dark mode",
+              "3 ta trade (Lifetime limit)",
+              "AI Screenshot Scan",
+              "Asosiy statistika",
             ]}
-            cta="Start for free"
+            cta="Hozir boshlash"
           />
           <PricingCard
             plan="pro"
             name="Pro"
-            price="$9"
-            period="/ month"
-            description="For traders who want AI-powered insights and deeper analytics."
+            price="$14"
+            period="/oy"
+            description="Cheksiz trade va chuqur AI tahlil istagan traderlar uchun."
             features={[
-              "Everything in Free",
-              "AI chart analysis",
-              "AI trade feedback",
-              "Advanced analytics (90 & 365 day)",
-              "Profit factor & asset breakdown",
-              "Priority support",
+              "Cheksiz tradelar",
+              "AI Trading Coach",
+              "Psixologiya Tahlili & Mood Heatmap",
+              "Deep Leak Detection",
+              "Chuqur AI Feedback",
+              "Shaxsiy checklistlar",
             ]}
-            cta="Start Pro"
+            cta="Pro'ga o'tish"
             highlighted
           />
         </div>
