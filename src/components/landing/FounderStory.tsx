@@ -2,7 +2,7 @@ export function FounderStory() {
   return (
     <section id="story" className="bg-surface2 border-y border-border">
       <div className="max-w-6xl mx-auto px-6 py-20">
-        <div className="max-w-md mb-12">
+        <div className="max-w-md mb-12 mx-auto text-center">
           <p className="text-xs font-dm-mono text-text-3 uppercase tracking-widest mb-3">
             Why TradeLog exists
           </p>
@@ -13,7 +13,7 @@ export function FounderStory() {
           </h2>
         </div>
 
-        <div className="max-w-2xl bg-surface border border-border rounded-2xl p-8">
+        <div className="max-w-2xl mx-auto bg-surface border border-border rounded-2xl p-8">
           <div className="space-y-4 mb-8">
             <p className="text-sm text-text-2 font-dm-sans leading-relaxed">
               I&apos;ve been trading for a while, but like most traders — I didn&apos;t

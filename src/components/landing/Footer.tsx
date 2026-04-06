@@ -30,13 +30,7 @@ export function Footer() {
           </span>
         </div>
 
-        <div className="flex items-center gap-5">
-          <Link
-            href="/login"
-            className="text-xs text-text-3 hover:text-text transition-colors font-dm-sans"
-          >
-            Sign in
-          </Link>
+        <div className="flex items-center gap-5 flex-wrap justify-center">
           <a
             href="#features"
             className="text-xs text-text-3 hover:text-text transition-colors font-dm-sans"
@@ -55,6 +49,24 @@ export function Footer() {
           >
             About
           </a>
+          <Link
+            href="/privacy"
+            className="text-xs text-text-3 hover:text-text transition-colors font-dm-sans"
+          >
+            Privacy Policy
+          </Link>
+          <Link
+            href="/terms"
+            className="text-xs text-text-3 hover:text-text transition-colors font-dm-sans"
+          >
+            Terms of Service
+          </Link>
+          <Link
+            href="/login"
+            className="text-xs text-text-3 hover:text-text transition-colors font-dm-sans"
+          >
+            Sign in
+          </Link>
         </div>
       </div>
     </footer>

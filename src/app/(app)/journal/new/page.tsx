@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { AIAnalysisResult, Profile } from "@/types";
 import Toast from "@/components/Toast";
@@ -257,7 +258,7 @@ export default function NewTradePage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.push("/login"); return; }
 
-    if (profile?.plan === "free" && tradeCount >= 30) {
+    if (profile?.plan === "free" && tradeCount >= 3) {
       setToast({ show: true, message: nt.freeLimitReached });
       setSaving(false);
       return;
@@ -309,6 +310,7 @@ export default function NewTradePage() {
   }
 
   const rrColor = rr === null ? "var(--text-2)" : rr >= 2 ? "var(--green)" : rr >= 1 ? "var(--amber)" : "var(--red)";
+  const isLimitReached = profile?.plan === "free" && tradeCount >= 3;
 
   return (
     <div>
@@ -325,6 +327,21 @@ export default function NewTradePage() {
           #{tradeCount + 1} · {today}
         </div>
       </div>
+
+      {/* Limit banner */}
+      {isLimitReached && (
+        <div className="bg-amber-bg border border-amber-br rounded-xl p-4 mb-5 flex items-center justify-between gap-4">
+          <p className="text-sm text-amber font-dm-sans leading-snug">
+            {nt.freeLimitReached}
+          </p>
+          <Link
+            href="/settings"
+            className="shrink-0 text-xs bg-teal text-white px-3 py-1.5 rounded-lg font-dm-sans font-medium whitespace-nowrap"
+          >
+            {t.settings.selectPlan}
+          </Link>
+        </div>
+      )}
 
       {/* Upload zone */}
       <div
@@ -617,7 +634,13 @@ export default function NewTradePage() {
             <button onClick={() => router.push("/journal")} className="px-3.5 md:px-3.5 py-2 md:py-2 bg-surface2 text-text-2 border border-border rounded-lg font-dm-sans text-[12px] md:text-[13px] cursor-pointer">
               {nt.cancel}
             </button>
-            <button onClick={saveTrade} disabled={saving} className="px-5 md:px-8 py-2.5 md:py-3.5 bg-text text-bg border-none rounded-lg font-dm-sans text-[13px] md:text-[14px] font-medium cursor-pointer transition-all disabled:not-allowed disabled:opacity-60" style={{ opacity: saving ? 0.6 : 1 }}>
+            <button
+              onClick={saveTrade}
+              disabled={saving || isLimitReached}
+              title={isLimitReached ? nt.freeLimitReached : undefined}
+              className="px-5 md:px-8 py-2.5 md:py-3.5 bg-text text-bg border-none rounded-lg font-dm-sans text-[13px] md:text-[14px] font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ opacity: saving || isLimitReached ? 0.5 : 1 }}
+            >
               {saving ? nt.saving : nt.save}
             </button>
           </div>

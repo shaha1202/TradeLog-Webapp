@@ -19,9 +19,11 @@ interface SidebarStats {
 export default function Sidebar({
   profile,
   stats,
+  totalTradeCount,
 }: {
   profile: Profile | null;
   stats: SidebarStats;
+  totalTradeCount: number;
 }) {
   const pathname = usePathname();
   const { theme, toggle } = useTheme();
@@ -63,6 +65,7 @@ export default function Sidebar({
       id: "stats",
       href: "/stats",
       label: t.nav.stats,
+      badge: profile?.plan === "free" ? "Pro" : undefined,
       icon: (
         <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
           <path
@@ -169,6 +172,7 @@ export default function Sidebar({
             icon={item.icon}
             active={isActive(item.href)}
             isDark={theme === "dark"}
+            badge={item.badge}
           />
         ))}
       </nav>
@@ -199,6 +203,23 @@ export default function Sidebar({
           }
         />
       </div>
+
+      {/* Free plan trade counter */}
+      {profile?.plan === "free" && (
+        <div className="mb-3 px-1">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-dm-mono text-text-3">
+              {t.newTrade.freeTradesUsed.replace("{count}", String(Math.min(totalTradeCount, 3)))}
+            </span>
+          </div>
+          <div className="h-1 bg-surface2 rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all ${totalTradeCount >= 3 ? "bg-amber" : "bg-teal"}`}
+              style={{ width: `${Math.min((totalTradeCount / 3) * 100, 100)}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* User */}
       <div className="mt-auto pt-5 border-t border-border">

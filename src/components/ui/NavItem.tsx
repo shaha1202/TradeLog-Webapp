@@ -8,9 +8,10 @@ interface NavItemProps {
   icon: React.ReactNode;
   active: boolean;
   isDark: boolean;
+  badge?: string;
 }
 
-export default function NavItem({ href, label, icon, active, isDark }: NavItemProps) {
+export default function NavItem({ href, label, icon, active, isDark, badge }: NavItemProps) {
   const activeClasses = isDark
     ? "bg-surface3 border-border-dark text-text"
     : "bg-text border-transparent text-white";
@@ -33,7 +34,12 @@ export default function NavItem({ href, label, icon, active, isDark }: NavItemPr
       ].join(" ")}
     >
       <span className={`flex-shrink-0 ${iconClasses}`}>{icon}</span>
-      {label}
+      <span className="flex-1">{label}</span>
+      {badge && (
+        <span className="text-[9px] font-dm-mono bg-teal text-white px-1.5 py-0.5 rounded-full leading-none">
+          {badge}
+        </span>
+      )}
     </Link>
   );
 }

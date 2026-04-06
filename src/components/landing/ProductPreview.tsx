@@ -65,7 +65,7 @@ const maxAbs = Math.max(...DAILY_BARS.map((b) => Math.abs(b.pnl)), 1);
 export function ProductPreview() {
   return (
     <section id="preview" className="max-w-6xl mx-auto px-6 py-20">
-      <div className="max-w-md mb-12">
+      <div className="max-w-md mb-12 mx-auto text-center">
         <p className="text-xs font-dm-mono text-text-3 uppercase tracking-widest mb-3">
           Product
         </p>
