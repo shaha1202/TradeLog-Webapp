@@ -149,7 +149,7 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
                     <path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17H8v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                  AI Feedback
+                  {d.aiFeedback}
                 </div>
                 {translatedFeedback ?? trade.ai_feedback}
               </div>
@@ -157,7 +157,7 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
                   <span className="text-[10px] bg-teal text-white px-2 py-0.5 rounded-full font-dm-mono font-medium">Pro</span>
                   <Link href="/settings" className="text-[11px] text-text-2 font-dm-sans hover:text-text transition-colors">
-                    Pro&apos;ga o&apos;tish →
+                    {d.upgradeToPro}
                   </Link>
                 </div>
               )}
@@ -171,12 +171,12 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
             {d.tradeInfo}
           </div>
           {[
-            { label: "Entry", value: trade.entry ?? "—" },
-            { label: "Stop Loss", value: trade.sl ?? "—" },
-            { label: "Take Profit", value: trade.tp ?? "—" },
-            { label: "Lot size", value: trade.lot_size ?? "—" },
-            { label: "Risk %", value: trade.risk_percent ? `${trade.risk_percent}%` : "—" },
-            { label: "Risk $", value: trade.risk_dollar ? `$${trade.risk_dollar}` : "—" },
+            { label: d.entry, value: trade.entry ?? "—" },
+            { label: d.stopLoss, value: trade.sl ?? "—" },
+            { label: d.takeProfit, value: trade.tp ?? "—" },
+            { label: d.lotSize, value: trade.lot_size ?? "—" },
+            { label: d.riskPercent, value: trade.risk_percent ? `${trade.risk_percent}%` : "—" },
+            { label: d.riskDollar, value: trade.risk_dollar ? `$${trade.risk_dollar}` : "—" },
           ].map(({ label, value }) => (
             <div key={label} className="flex justify-between items-center py-2 border-b border-border last:border-0">
               <span className="text-[11px] md:text-[12px] text-text-2">{label}</span>
@@ -185,7 +185,7 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
           ))}
           {trade.htf_trend && (
             <div className="flex justify-between items-center py-2 border-b border-border last:border-0">
-              <span className="text-[11px] md:text-[12px] text-text-2">HTF Trend</span>
+              <span className="text-[11px] md:text-[12px] text-text-2">{d.htfTrend}</span>
               <span className="text-[11px] font-medium py-0.5 md:py-[3px] px-2 md:px-2.5 rounded-md font-dm-mono tracking-[0.04em]" style={{
                 background: /bull/i.test(trade.htf_trend) ? "var(--green-bg)" : /bear/i.test(trade.htf_trend) ? "var(--red-bg)" : "var(--amber-bg)",
                 color: /bull/i.test(trade.htf_trend) ? "var(--green)" : /bear/i.test(trade.htf_trend) ? "var(--red)" : "var(--amber)",
@@ -243,7 +243,7 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
           <div>
             {trade.confluence && trade.confluence.length > 0 && (
               <div className="mb-3">
-                <div className="text-[11px] text-text-3 mb-1.5">Confluence</div>
+                <div className="text-[11px] text-text-3 mb-1.5">{d.confluence}</div>
                 <div className="flex flex-wrap gap-1.5">
                   {trade.confluence.map((c) => (
                     <span key={c} className="py-1 md:py-[5px] px-2.5 md:px-3 rounded-lg text-[11px] md:text-[12px] bg-purple-bg text-purple border border-purple-br">
@@ -255,7 +255,7 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
             )}
             {trade.checklist && Object.keys(trade.checklist).length > 0 && (
               <div>
-                <div className="text-[11px] text-text-3 mb-2">Checklist</div>
+                <div className="text-[11px] text-text-3 mb-2">{d.checklist}</div>
                 {Object.entries(trade.checklist).map(([key, val]) => {
                   const isNumericKey = /^\d+$/.test(key);
                   if (isNumericKey) return null;

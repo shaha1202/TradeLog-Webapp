@@ -71,7 +71,7 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
       if (now.getHours() === h && now.getMinutes() === m) {
         if (typeof Notification !== "undefined" && Notification.permission === "granted") {
           new Notification("TradeLog", {
-            body: "Bugungi tradelaringizni jurnalga kiritishni unutmang! 📊",
+            body: s.notificationBody,
             icon: "/favicon.ico",
           });
         }
@@ -94,7 +94,7 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
     if (!error) {
       setProfile((p) => p ? { ...p, account_balance: parseFloat(balance), default_risk: parseFloat(riskPct), currency, strategy } : p);
       setModal(null);
-      showToast("Hisob sozlamalari saqlandi");
+      showToast(s.toastAccountSaved);
       fetch("/api/profile/revalidate", { method: "POST" });
     }
   }
@@ -105,7 +105,7 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
     if (!error) {
       setProfile((p) => p ? { ...p, full_name: fullName } : p);
       setModal(null);
-      showToast("Profil yangilandi");
+      showToast(s.toastProfileSaved);
       fetch("/api/profile/revalidate", { method: "POST" });
     }
   }
@@ -141,7 +141,7 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
     const supabase = createClient();
     await supabase.from("trades").delete().eq("user_id", userId);
     setModal(null);
-    showToast("Barcha ma'lumotlar tozalandi");
+    showToast(s.toastDataCleared);
     router.refresh();
   }
 
@@ -231,7 +231,7 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
           icon={<rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />}
           iconBg="var(--green-bg)" iconColor="var(--green)"
           name={s.accountSize}
-          sub={profile?.account_balance ? `$${profile.account_balance} · ${profile.default_risk}% risk${profile.strategy?.length ? ` · ${profile.strategy.join(", ")}` : ""}` : "Kiritilmagan"}
+          sub={profile?.account_balance ? `$${profile.account_balance} · ${profile.default_risk}% risk${profile.strategy?.length ? ` · ${profile.strategy.join(", ")}` : ""}` : s.notEntered}
           onClick={() => setModal("account")}
         />
         <SetRow
@@ -396,7 +396,7 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
                 <div className="font-fraunces text-[17px] md:text-[20px] font-light mb-5 text-text">{s.profileTitle}</div>
                 <div className="mb-3.5">
                   <label className="block text-[11px] text-text-2 mb-1.5">{s.nameLabel}</label>
-                  <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="To'liq ism" />
+                  <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder={s.namePlaceholder} />
                 </div>
                 <div className="mb-3.5">
                   <label className="block text-[11px] text-text-2 mb-1.5">{s.emailLabel}</label>
@@ -416,7 +416,7 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
                   onClick={() => handleStripeCheckout(process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID ?? "")}
                 >
                   <div className="font-medium text-[13px] md:text-[14px] text-text">{s.proMonthly}</div>
-                  <div className="text-[15px] md:text-[16px] text-teal font-dm-mono font-medium mt-1">$14<span className="text-[12px] font-normal">/oy</span></div>
+                  <div className="text-[15px] md:text-[16px] text-teal font-dm-mono font-medium mt-1">$14<span className="text-[12px] font-normal">{s.perMonth}</span></div>
                   <div className="text-[11px] md:text-[12px] text-text-3 mt-0.5">Cheksiz tradelar · Chuqur AI Feedback · Ekspert statistika</div>
                 </div>
                 <button onClick={() => setModal(null)} className="w-full py-2.5 bg-none text-text-2 border-none text-[12px] md:text-[13px] cursor-pointer mt-2">{s.cancel}</button>

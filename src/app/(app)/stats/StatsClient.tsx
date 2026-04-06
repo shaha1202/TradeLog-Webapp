@@ -250,7 +250,7 @@ export default function StatsClient({ trades, profile }: { trades: Trade[]; prof
                   </svg>
                 </div>
                 <div>
-                  <div className="text-[12px] md:text-[13px] font-medium text-text">AI Coach</div>
+                  <div className="text-[12px] md:text-[13px] font-medium text-text">{st.aiCoach}</div>
                   <div className="text-[10px] md:text-[11px] text-text-3 mt-0.5">{st.aiInsight}</div>
                 </div>
               </div>
