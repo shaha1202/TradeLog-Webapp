@@ -124,7 +124,7 @@ export default function Sidebar({
 
         <button
           onClick={toggle}
-          title="Mavzu"
+          title={t.nav.theme}
           className="w-8 h-8 rounded-lg border border-border bg-surface2 flex items-center justify-center text-text-2 cursor-pointer transition-all duration-200 hover:bg-surface3"
         >
           {theme === "dark" ? (
@@ -159,7 +159,7 @@ export default function Sidebar({
 
       {/* Nav section label */}
       <p className="text-[10px] font-medium tracking-[0.12em] uppercase text-text-3 mb-2 px-1">
-        Menu
+        {t.nav.menu}
       </p>
 
       {/* Nav */}
@@ -192,12 +192,12 @@ export default function Sidebar({
           color={pnlColor}
         />
         <StatItem
-          label="Win rate"
+          label={t.journal.winRate}
           value={stats.winRate !== null ? `${stats.winRate}%` : "—"}
         />
         <StatItem label={t.journal.trades} value={String(stats.count)} />
         <StatItem
-          label="Avg R:R"
+          label={t.journal.avgRR}
           value={
             stats.avgRR !== null ? `${stats.avgRR.toFixed(2)}R` : "—"
           }
@@ -226,7 +226,7 @@ export default function Sidebar({
         <UserCard
           initials={getInitials(profile?.full_name ?? null)}
           name={profile?.full_name || "Trader"}
-          plan={profile?.plan === "free" ? "Free plan" : "Pro plan"}
+          plan={profile?.plan === "free" ? t.settings.freePlan : t.settings.proPlan}
         />
       </div>
     </aside>

@@ -416,18 +416,18 @@ export default function NewTradePage() {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-[14px] mb-3.5 md:mb-[14px]">
               <div className={`flex flex-col gap-1.5 md:gap-2 ${aiFields.has("asset") ? "ai-filled" : ""}`}>
-                <label className="text-[11px] text-text-2">Asset / Pair</label>
+                <label className="text-[11px] text-text-2">{nt.asset}</label>
                 <input type="text" value={asset} onChange={(e) => setAsset(e.target.value)} placeholder="XAUUSD" className={aiFields.has("asset") ? "ai-auto" : ""} />
               </div>
               <div className={`flex flex-col gap-1.5 md:gap-2 ${aiFields.has("timeframe") ? "ai-filled" : ""}`}>
-                <label className="text-[11px] text-text-2">Timeframe</label>
+                <label className="text-[11px] text-text-2">{nt.timeframe}</label>
                 <select value={timeframe} onChange={(e) => setTimeframe(e.target.value)} className={aiFields.has("timeframe") ? "ai-auto" : ""}>
                   <option value="">—</option>
                   {TIMEFRAMES.map((t) => <option key={t}>{t}</option>)}
                 </select>
               </div>
               <div className={`flex flex-col gap-1.5 md:gap-2 ${aiFields.has("session") ? "ai-filled" : ""}`}>
-                <label className="text-[11px] text-text-2">Session</label>
+                <label className="text-[11px] text-text-2">{nt.session}</label>
                 <select value={session} onChange={(e) => setSession(e.target.value)} className={aiFields.has("session") ? "ai-auto" : ""}>
                   <option value="">—</option>
                   {SESSIONS.map((s) => <option key={s}>{s}</option>)}
@@ -444,7 +444,7 @@ export default function NewTradePage() {
                           : "border-red-br bg-red-bg text-red"
                         : "border-border bg-surface2 text-text-2"
                     }`}>
-                      {d === "LONG" ? "▲ Long" : "▼ Short"}
+                      {d === "LONG" ? nt.long : nt.short}
                     </button>
                   ))}
                 </div>
@@ -453,9 +453,9 @@ export default function NewTradePage() {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-[14px]">
               {[
-                { id: "entry", label: "Entry", value: entry, set: setEntry },
-                { id: "sl", label: "Stop Loss", value: sl, set: setSl },
-                { id: "tp", label: "Take Profit", value: tp, set: setTp },
+                { id: "entry", label: nt.entry, value: entry, set: setEntry },
+                { id: "sl", label: nt.stopLoss, value: sl, set: setSl },
+                { id: "tp", label: nt.takeProfit, value: tp, set: setTp },
               ].map(({ id, label, value, set }) => (
                 <div key={id} className={`flex flex-col gap-1.5 md:gap-2 ${aiFields.has(id) ? "ai-filled" : ""}`}>
                   <label className="text-[11px] text-text-2">{label}</label>
@@ -463,7 +463,7 @@ export default function NewTradePage() {
                 </div>
               ))}
               <div className="flex flex-col gap-1.5 md:gap-2">
-                <label className="text-[11px] text-text-2">R : R</label>
+                <label className="text-[11px] text-text-2">{nt.rrLabel}</label>
                 <div className="bg-surface2 rounded-lg py-2 md:py-[9px] px-3 md:px-3 font-dm-mono text-[13px] md:text-[14px] font-medium border border-border min-h-[34px] md:min-h-[37px] flex items-center" style={{ color: rrColor }}>
                   {rr !== null ? `${rr}R` : "—"}
                 </div>
@@ -483,10 +483,10 @@ export default function NewTradePage() {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-[14px] mb-3.5 md:mb-[14px]">
               {[
-                { label: "Lot size", value: lotSize, set: setLotSize, placeholder: "0.01", step: "0.01", readonly: false },
-                { label: "Risk ($)", value: riskDollar, set: setRiskDollar, placeholder: "0.00", step: "0.01", readonly: true },
-                { label: "Risk (%)", value: riskPercent, set: setRiskPercent, placeholder: "1.0", step: "0.1", readonly: false },
-                { label: "P&L ($)", value: pnl, set: setPnl, placeholder: "0.00", step: "0.01", readonly: false },
+                { label: nt.lotSize, value: lotSize, set: setLotSize, placeholder: "0.01", step: "0.01", readonly: false },
+                { label: nt.riskDollar, value: riskDollar, set: setRiskDollar, placeholder: "0.00", step: "0.01", readonly: true },
+                { label: nt.riskPercent, value: riskPercent, set: setRiskPercent, placeholder: "1.0", step: "0.1", readonly: false },
+                { label: nt.pnlLabel, value: pnl, set: setPnl, placeholder: "0.00", step: "0.01", readonly: false },
               ].map(({ label, value, set, placeholder, step, readonly }) => (
                 <div key={label} className="flex flex-col gap-1.5 md:gap-2">
                   <label className="text-[11px] text-text-2">{label}</label>
@@ -498,10 +498,10 @@ export default function NewTradePage() {
               <label className="text-[11px] text-text-2">{nt.result}</label>
               <div className="flex gap-2">
                 {([
-                  { key: "win", label: "✓ Win", on: { bg: "var(--green-bg)", border: "var(--green-br)", color: "var(--green)" } },
-                  { key: "loss", label: "✗ Loss", on: { bg: "var(--red-bg)", border: "var(--red-br)", color: "var(--red)" } },
-                  { key: "be", label: "~ BE", on: { bg: "var(--amber-bg)", border: "var(--amber-br)", color: "var(--amber)" } },
-                ] as const).map(({ key, label, on }) => (
+                  { key: "win" as const, label: nt.win, on: { bg: "var(--green-bg)", border: "var(--green-br)", color: "var(--green)" } },
+                  { key: "loss" as const, label: nt.loss, on: { bg: "var(--red-bg)", border: "var(--red-br)", color: "var(--red)" } },
+                  { key: "be" as const, label: nt.be, on: { bg: "var(--amber-bg)", border: "var(--amber-br)", color: "var(--amber)" } },
+                ]).map(({ key, label, on }) => (
                   <button key={key} onClick={() => setResult(result === key ? null : key)} className={`flex-1 py-2 md:py-[9px] rounded-lg text-[11px] md:text-[12px] font-medium cursor-pointer transition-all font-dm-mono border ${
                     result === key
                       ? `border-[${on.border}] bg-[${on.bg}] text-[${on.color}]`
@@ -556,7 +556,7 @@ export default function NewTradePage() {
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
                     <path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17H8v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                  AI Feedback
+                  nt.aiFeedback
                 </div>
                 {feedback}
               </div>
