@@ -13,16 +13,6 @@ const DEFAULT_CONFLUENCE = [
   "EMA 200", "Support / Resistance", "Session Open", "HTF Trend", "Fibonacci",
 ];
 
-const DEFAULT_CHECKLIST = [
-  "HTF trend bilan mos yo'nalish",
-  "Kamida 2 ta confluence bor",
-  "R:R kamida 1:2",
-  "Risk 1–2% dan oshmaydi",
-  "SL mantiqiy joyda",
-  "Economic calendar tekshirildi",
-];
-
-const MOODS = ["Ishonchli", "Sabr bilan", "Xotirjam", "Shoshqaloq", "FOMO", "Stress", "Zavqli"];
 const TIMEFRAMES = ["M1", "M5", "M15", "M30", "H1", "H4", "D1"];
 const SESSIONS = ["Asian", "London", "New York", "London + NY"];
 
@@ -30,6 +20,17 @@ export default function NewTradePage() {
   const router = useRouter();
   const { t, lang } = useLanguage();
   const nt = t.newTrade;
+
+  // Use translated arrays from i18n - technical terms stay hardcoded
+  const MOODS = [...(t.common?.moods ?? ["Ishonchli", "Sabr bilan", "Xotirjam", "Shoshqaloq", "FOMO", "Stress", "Zavqli"])];
+  const DEFAULT_CHECKLIST = [...(t.settings?.defaultChecklistItems ?? [
+    "HTF trend bilan mos yo'nalish",
+    "Kamida 2 ta confluence bor",
+    "R:R kamida 1:2",
+    "Risk 1–2% dan oshmaydi",
+    "SL mantiqiy joyda",
+    "Economic calendar tekshirildi",
+  ])];
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [today, setToday] = useState("");
@@ -526,7 +527,7 @@ export default function NewTradePage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-[14px] mb-3.5 md:mb-[14px]">
               <div className={`flex flex-col gap-1.5 md:gap-2 ${aiFields.has("htfTrend") ? "ai-filled" : ""}`}>
-                <label className="text-[11px] text-text-2">HTF Trend</label>
+                <label className="text-[11px] text-text-2">{nt.htfTrend}</label>
                 <input type="text" value={htfTrend} onChange={(e) => setHtfTrend(e.target.value)} placeholder="Bearish · H4" className={aiFields.has("htfTrend") ? "ai-auto" : ""} />
               </div>
               <div className="flex flex-col gap-1.5 md:gap-2">

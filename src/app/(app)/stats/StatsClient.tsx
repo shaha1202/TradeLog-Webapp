@@ -102,7 +102,7 @@ export default function StatsClient({ trades, profile }: { trades: Trade[]; prof
 
     const assetSummary = Object.entries(
       filtered.reduce((acc, t) => {
-        const a = t.asset ?? "Other";
+        const a = t.asset ?? st.other;
         if (!acc[a]) acc[a] = { count: 0, wins: 0 };
         acc[a].count++;
         if (t.result === "win") acc[a].wins++;

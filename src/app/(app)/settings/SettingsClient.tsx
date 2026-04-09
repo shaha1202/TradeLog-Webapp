@@ -8,25 +8,28 @@ import Toast from "@/components/Toast";
 import { useLanguage } from "@/lib/i18n";
 import { LanguageSelector } from "@/components/LanguageSelector";
 
-const DEFAULT_CHECKLIST = [
-  "HTF trend bilan mos yo'nalish",
-  "Kamida 2 ta confluence bor",
-  "R:R kamida 1:2",
-  "Risk 1–2% dan oshmaydi",
-  "SL mantiqiy joyda",
-  "Economic calendar tekshirildi",
-];
-const DEFAULT_CONFLUENCE = [
-  "FVG", "Order Block", "Liquidity Sweep", "Break of Structure",
-  "EMA 200", "Support / Resistance", "Session Open", "HTF Trend", "Fibonacci",
-];
-
 type ModalType = "account" | "profile" | "plan" | "checklist" | "confluence" | "clear" | null;
 
 export default function SettingsClient({ profile: initialProfile, userId }: { profile: Profile | null; userId: string }) {
   const router = useRouter();
   const { t } = useLanguage();
   const s = t.settings;
+
+  // Use translated default checklist from i18n
+  const DEFAULT_CHECKLIST = [...(t.settings?.defaultChecklistItems ?? [
+    "HTF trend bilan mos yo'nalish",
+    "Kamida 2 ta confluence bor",
+    "R:R kamida 1:2",
+    "Risk 1–2% dan oshmaydi",
+    "SL mantiqiy joyda",
+    "Economic calendar tekshirildi",
+  ])];
+
+  const DEFAULT_CONFLUENCE = [
+    "FVG", "Order Block", "Liquidity Sweep", "Break of Structure",
+    "EMA 200", "Support / Resistance", "Session Open", "HTF Trend", "Fibonacci",
+  ];
+
   const [profile, setProfile] = useState(initialProfile);
   const [modal, setModal] = useState<ModalType>(null);
   const [toast, setToast] = useState({ show: false, message: "" });
@@ -238,7 +241,7 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
           icon={<><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></>}
           iconBg="var(--teal-bg)" iconColor="var(--teal)"
           name={s.profile}
-          sub={profile?.full_name || "Trader"}
+          sub={profile?.full_name || t.settings?.traderFallback}
           onClick={() => setModal("profile")}
         />
         <div className="border-b-0">
@@ -417,7 +420,7 @@ export default function SettingsClient({ profile: initialProfile, userId }: { pr
                 >
                   <div className="font-medium text-[13px] md:text-[14px] text-text">{s.proMonthly}</div>
                   <div className="text-[15px] md:text-[16px] text-teal font-dm-mono font-medium mt-1">$14<span className="text-[12px] font-normal">{s.perMonth}</span></div>
-                  <div className="text-[11px] md:text-[12px] text-text-3 mt-0.5">Cheksiz tradelar · Chuqur AI Feedback · Ekspert statistika</div>
+                  <div className="text-[11px] md:text-[12px] text-text-3 mt-0.5">{s.proFeaturesDesc}</div>
                 </div>
                 <button onClick={() => setModal(null)} className="w-full py-2.5 bg-none text-text-2 border-none text-[12px] md:text-[13px] cursor-pointer mt-2">{s.cancel}</button>
               </>

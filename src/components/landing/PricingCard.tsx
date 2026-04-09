@@ -1,4 +1,3 @@
-import Link from "next/link";
 
 interface PricingCardProps {
   plan: "free" | "pro";
@@ -86,8 +85,8 @@ export function PricingCard({
         ))}
       </ul>
 
-      <Link
-        href="/login"
+      <a
+        href={`${process.env.NEXT_PUBLIC_APP_URL}/login`}
         className={`w-full text-center text-sm font-medium font-dm-sans py-2.5 rounded-lg transition-opacity hover:opacity-90 ${
           highlighted
             ? "bg-teal text-white"
@@ -95,7 +94,7 @@ export function PricingCard({
         }`}
       >
         {cta}
-      </Link>
+      </a>
     </div>
   );
 }

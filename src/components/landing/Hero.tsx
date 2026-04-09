@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 import { MockTradeCard } from "./MockTradeCard";
 import { MockStatsBlock } from "./MockStatsBlock";
 import { useLanguage } from "@/lib/i18n";
@@ -63,8 +62,8 @@ export function Hero() {
           </p>
 
           <div className="flex items-center gap-3 flex-wrap">
-            <Link
-              href="/login"
+            <a
+              href={`${process.env.NEXT_PUBLIC_APP_URL}/login`}
               className="inline-flex items-center gap-2 bg-teal text-white font-dm-sans font-medium text-sm px-5 py-2.5 rounded-lg hover:opacity-90 transition-opacity"
             >
               {l.cta1}
@@ -83,7 +82,7 @@ export function Hero() {
                   strokeLinejoin="round"
                 />
               </svg>
-            </Link>
+            </a>
             <a
               href="#preview"
               className="inline-flex items-center gap-2 bg-surface border border-border text-text font-dm-sans font-medium text-sm px-5 py-2.5 rounded-lg hover:border-border-dark transition-colors"
