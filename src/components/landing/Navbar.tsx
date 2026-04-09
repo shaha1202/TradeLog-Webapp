@@ -44,18 +44,18 @@ export function Navbar() {
         {/* Actions */}
         <div className="flex items-center gap-2 sm:gap-3">
           <LanguageSelector />
-          <Link
-            href="/login"
+          <a
+            href={`${process.env.NEXT_PUBLIC_APP_URL}/login`}
             className="hidden sm:block text-sm text-text-2 hover:text-text transition-colors font-dm-sans"
           >
             {l.signIn}
-          </Link>
-          <Link
-            href="/login"
+          </a>
+          <a
+            href={`${process.env.NEXT_PUBLIC_APP_URL}/login`}
             className="text-sm font-medium bg-teal text-white px-3 sm:px-4 py-1.5 rounded-lg hover:opacity-90 transition-opacity font-dm-sans whitespace-nowrap"
           >
             {l.startFree}
-          </Link>
+          </a>
         </div>
       </div>
     </nav>

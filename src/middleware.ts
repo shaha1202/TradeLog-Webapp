@@ -2,6 +2,34 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 export async function middleware(request: NextRequest) {
+  const host = request.headers.get("host") || "";
+  const isAppSubdomain =
+    host.startsWith("app.") || process.env.NODE_ENV === "development";
+  const { pathname } = request.nextUrl;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+  // Main domain (gettradelog.com): serve landing pages only
+  if (!isAppSubdomain) {
+    const isLandingRoute =
+      pathname === "/" ||
+      pathname.startsWith("/privacy") ||
+      pathname.startsWith("/terms") ||
+      pathname.startsWith("/api") ||
+      pathname.startsWith("/auth") ||
+      pathname.startsWith("/_next");
+
+    if (!isLandingRoute) {
+      // Redirect /login, /journal, /stats, /settings etc. to app subdomain
+      return NextResponse.redirect(
+        new URL(pathname + request.nextUrl.search, appUrl)
+      );
+    }
+
+    return NextResponse.next({ request });
+  }
+
+  // === App subdomain (app.gettradelog.com) ===
+
   // Skip auth checks if Supabase is not configured
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return NextResponse.next({ request });
@@ -38,8 +66,24 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  const { pathname } = request.nextUrl;
-  const isPublic = pathname === "/" || pathname.startsWith("/login") || pathname.startsWith("/api");
+  // Root path on app subdomain → redirect to journal or login (production only)
+  // In dev, keep / accessible so the landing page can be previewed on localhost
+  if (pathname === "/" && process.env.NODE_ENV !== "development") {
+    return NextResponse.redirect(
+      new URL(user ? "/journal" : "/login", request.url)
+    );
+  }
+
+  // In dev, also allow landing routes so the landing page is previewable on localhost
+  const isDevLandingRoute =
+    process.env.NODE_ENV === "development" &&
+    (pathname === "/" || pathname.startsWith("/privacy") || pathname.startsWith("/terms"));
+
+  const isPublic =
+    isDevLandingRoute ||
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/auth");
 
   if (!user && !isPublic) {
     return NextResponse.redirect(new URL("/login", request.url));

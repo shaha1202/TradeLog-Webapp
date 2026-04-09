@@ -225,7 +225,7 @@ export default function Sidebar({
       <div className="mt-auto pt-5 border-t border-border">
         <UserCard
           initials={getInitials(profile?.full_name ?? null)}
-          name={profile?.full_name || "Trader"}
+          name={profile?.full_name || t.settings?.traderFallback}
           plan={profile?.plan === "free" ? t.settings.freePlan : t.settings.proPlan}
         />
       </div>

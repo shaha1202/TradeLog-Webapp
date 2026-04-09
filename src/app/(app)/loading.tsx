@@ -7,7 +7,6 @@ export default function Loading() {
           borderTopColor: "var(--teal)", borderRadius: "50%",
           animation: "spin 0.7s linear infinite", margin: "0 auto 16px",
         }} />
-        <p style={{ fontSize: 13, color: "var(--text-3)" }}>Yuklanmoqda...</p>
       </div>
     </div>
   );

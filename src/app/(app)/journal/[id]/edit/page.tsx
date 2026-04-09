@@ -5,11 +5,10 @@ import { useRouter, useParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Trade, Profile } from "@/types";
 import Toast from "@/components/Toast";
+import { useLanguage } from "@/lib/i18n";
 
 const TIMEFRAMES = ["M1", "M5", "M15", "M30", "H1", "H4", "D1"];
 const SESSIONS = ["Asian", "London", "New York", "London + NY"];
-const MOODS = ["Ishonchli", "Sabr bilan", "Xotirjam", "Shoshqaloq", "FOMO", "Stress", "Zavqli"];
-
 const DEFAULT_CONFLUENCE = [
   "FVG", "Order Block", "Liquidity Sweep", "Break of Structure",
   "EMA 200", "Support / Resistance", "Session Open", "HTF Trend", "Fibonacci",
@@ -19,6 +18,19 @@ export default function EditTradePage() {
   const router = useRouter();
   const params = useParams();
   const tradeId = params.id as string;
+
+  // Use translated arrays from i18n - technical terms stay hardcoded
+  const { t } = useLanguage();
+  const nt = t.newTrade;
+  const MOODS = t.common?.moods ?? ["Ishonchli", "Sabr bilan", "Xotirjam", "Shoshqaloq", "FOMO", "Stress", "Zavqli"];
+  const DEFAULT_CHECKLIST = t.settings?.defaultChecklistItems ?? [
+    "HTF trend bilan mos yo'nalish",
+    "Kamida 2 ta confluence bor",
+    "R:R kamida 1:2",
+    "Risk 1–2% dan oshmaydi",
+    "SL mantiqiy joyda",
+    "Economic calendar tekshirildi",
+  ];
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 export function FinalCTA() {
   return (
     <section className="max-w-6xl mx-auto px-6 py-20">
@@ -23,8 +21,8 @@ export function FinalCTA() {
         </p>
 
         <div className="flex items-center justify-center gap-3 flex-wrap">
-          <Link
-            href="/login"
+          <a
+            href={`${process.env.NEXT_PUBLIC_APP_URL}/login`}
             className="inline-flex items-center gap-2 bg-teal text-white font-dm-sans font-medium text-sm px-6 py-2.5 rounded-lg hover:opacity-90 transition-opacity"
           >
             Start journaling free
@@ -43,7 +41,7 @@ export function FinalCTA() {
                 strokeLinejoin="round"
               />
             </svg>
-          </Link>
+          </a>
           <a
             href="#pricing"
             className="inline-flex items-center gap-2 bg-surface2 border border-border text-text font-dm-sans font-medium text-sm px-6 py-2.5 rounded-lg hover:border-border-dark transition-colors"
