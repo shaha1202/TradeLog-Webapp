@@ -1,6 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/lib/i18n";
+import { useScrollReveal } from "@/lib/hooks";
 
 const accentClasses: Record<string, { bg: string; text: string; border: string }> = {
   teal: { bg: "bg-teal-bg", text: "text-teal", border: "border-teal-br" },
@@ -13,6 +14,9 @@ export function SolutionSection() {
   const { t } = useLanguage();
   const l = t.landing;
 
+  const { ref: headingRef } = useScrollReveal<HTMLDivElement>({ threshold: 0.2 });
+  const { ref: gridRef } = useScrollReveal<HTMLDivElement>({ threshold: 0.1 });
+
   const solutions = [
     { label: "01", title: l.solution1Title, description: l.solution1Desc, accent: "teal" },
     { label: "02", title: l.solution2Title, description: l.solution2Desc, accent: "purple" },
@@ -22,7 +26,7 @@ export function SolutionSection() {
 
   return (
     <section className="max-w-6xl mx-auto px-6 py-20">
-      <div className="max-w-md mb-12 mx-auto text-center">
+      <div ref={headingRef} className="max-w-md mb-12 mx-auto text-center reveal">
         <p className="text-xs font-dm-mono text-text-3 uppercase tracking-widest mb-3">
           {l.solutionLabel}
         </p>
@@ -33,16 +37,17 @@ export function SolutionSection() {
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {solutions.map((s) => {
+      <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-2 gap-4 reveal-grid">
+        {solutions.map((s, i) => {
           const ac = accentClasses[s.accent];
           return (
             <div
               key={s.label}
-              className="bg-surface border border-border rounded-xl p-5 flex gap-4"
+              className="bg-surface border border-border rounded-xl p-5 flex gap-4 card-hover group reveal-sm"
+              style={{ animationDelay: `${i * 100}ms` }}
             >
               <div
-                className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${ac.bg} border ${ac.border}`}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${ac.bg} border ${ac.border} transition-transform duration-150 group-hover:scale-110`}
               >
                 <span className={`text-xs font-dm-mono font-medium ${ac.text}`}>
                   {s.label}

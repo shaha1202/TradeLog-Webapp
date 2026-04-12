@@ -1,10 +1,14 @@
 "use client";
 
 import { useLanguage } from "@/lib/i18n";
+import { useScrollReveal } from "@/lib/hooks";
 
 export function ProblemSection() {
   const { t } = useLanguage();
   const l = t.landing;
+
+  const { ref: headingRef } = useScrollReveal<HTMLDivElement>({ threshold: 0.2 });
+  const { ref: gridRef } = useScrollReveal<HTMLDivElement>({ threshold: 0.1 });
 
   const problems = [
     {
@@ -43,7 +47,7 @@ export function ProblemSection() {
   return (
     <section className="bg-surface2 border-y border-border">
       <div className="max-w-6xl mx-auto px-6 py-20">
-        <div className="max-w-md mb-12 mx-auto text-center">
+        <div ref={headingRef} className="max-w-md mb-12 mx-auto text-center reveal">
           <p className="text-xs font-dm-mono text-text-3 uppercase tracking-widest mb-3">
             {l.problemLabel}
           </p>
@@ -54,13 +58,14 @@ export function ProblemSection() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-3 gap-6 reveal-grid">
           {problems.map((p, i) => (
             <div
               key={i}
-              className="bg-surface border border-border rounded-xl p-5"
+              className="bg-surface border border-border rounded-xl p-5 card-hover group reveal-sm"
+              style={{ animationDelay: `${i * 150}ms` }}
             >
-              <div className="w-8 h-8 rounded-lg bg-red-bg text-red flex items-center justify-center mb-4">
+              <div className="w-8 h-8 rounded-lg bg-red-bg text-red flex items-center justify-center mb-4 transition-colors duration-200 group-hover:bg-red group-hover:text-white">
                 {p.icon}
               </div>
               <h3 className="text-sm font-medium text-text font-dm-sans mb-2">

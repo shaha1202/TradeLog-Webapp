@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { AIAnalysisResult, Profile } from "@/types";
 import Toast from "@/components/Toast";
 import { useLanguage } from "@/lib/i18n";
+import ImportTradesModal from "@/components/ImportTradesModal";
 
 const DEFAULT_CONFLUENCE = [
   "FVG", "Order Block", "Liquidity Sweep", "Break of Structure",
@@ -71,6 +72,7 @@ export default function NewTradePage() {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState({ show: false, message: "" });
   const [tradeCount, setTradeCount] = useState(0);
+  const [importOpen, setImportOpen] = useState(false);
 
   // Session draft key
   const DRAFT_KEY = "trade_draft_session";
@@ -324,8 +326,19 @@ export default function NewTradePage() {
             {nt.subtitle}
           </p>
         </div>
-        <div className="font-dm-mono text-[11px] md:text-[12px] text-text-3">
-          #{tradeCount + 1} · {today}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setImportOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-surface2 border border-border rounded-lg text-[12px] text-text-2 font-dm-sans hover:border-border-dark transition-all cursor-pointer"
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            {t.journal.importTrades}
+          </button>
+          <div className="font-dm-mono text-[11px] md:text-[12px] text-text-3">
+            #{tradeCount + 1} · {today}
+          </div>
         </div>
       </div>
 
@@ -649,6 +662,18 @@ export default function NewTradePage() {
       )}
 
       <Toast message={toast.message} show={toast.show} onHide={() => setToast({ show: false, message: "" })} />
+
+      <ImportTradesModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImported={(count) => {
+          setImportOpen(false);
+          router.push("/journal");
+          router.refresh();
+        }}
+        profile={profile}
+        currentTradeCount={tradeCount}
+      />
     </div>
   );
 }

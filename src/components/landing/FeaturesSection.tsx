@@ -2,10 +2,14 @@
 
 import { FeatureCard } from "./FeatureCard";
 import { useLanguage } from "@/lib/i18n";
+import { useScrollReveal } from "@/lib/hooks";
 
 export function FeaturesSection() {
   const { t } = useLanguage();
   const l = t.landing;
+
+  const { ref: headingRef } = useScrollReveal<HTMLDivElement>({ threshold: 0.2 });
+  const { ref: gridRef } = useScrollReveal<HTMLDivElement>({ threshold: 0.08 });
 
   const features = [
     {
@@ -61,10 +65,13 @@ export function FeaturesSection() {
     },
   ];
 
+  // Stagger delays: row 1 (0,100,200ms), row 2 (50,150ms)
+  const delays = [0, 100, 200, 50, 150];
+
   return (
     <section id="features" className="bg-surface2 border-y border-border">
       <div className="max-w-6xl mx-auto px-6 py-20">
-        <div className="max-w-md mb-12 mx-auto text-center">
+        <div ref={headingRef} className="max-w-md mb-12 mx-auto text-center reveal">
           <p className="text-xs font-dm-mono text-text-3 uppercase tracking-widest mb-3">
             {l.featuresLabel}
           </p>
@@ -75,14 +82,19 @@ export function FeaturesSection() {
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div ref={gridRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 reveal-grid">
           {features.map((f, i) => (
-            <FeatureCard
+            <div
               key={i}
-              icon={f.icon}
-              title={f.title}
-              description={f.description}
-            />
+              className="reveal-sm"
+              style={{ animationDelay: `${delays[i]}ms` }}
+            >
+              <FeatureCard
+                icon={f.icon}
+                title={f.title}
+                description={f.description}
+              />
+            </div>
           ))}
         </div>
       </div>

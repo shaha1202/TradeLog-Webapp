@@ -4,6 +4,7 @@ import { MockTradeCard } from "./MockTradeCard";
 import { MockStatsBlock } from "./MockStatsBlock";
 import { formatPnl } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n";
+import { useScrollReveal, useCountUp } from "@/lib/hooks";
 
 const WEEK_TRADES = [
   { asset: "EUR/USD", direction: "LONG" as const, result: "win" as const, pnl: 124.5, rr: 2.5, timeframe: "H4", session: "London" },
@@ -29,9 +30,29 @@ export function ProductPreview() {
   const { t } = useLanguage();
   const l = t.landing;
 
+  // Heading
+  const { ref: headingRef } = useScrollReveal<HTMLDivElement>({ threshold: 0.2 });
+
+  // Journal panel
+  const { ref: journalRef } = useScrollReveal<HTMLDivElement>({ threshold: 0.05 });
+
+  // Trade cards grid
+  const { ref: tradesRef } = useScrollReveal<HTMLDivElement>({ threshold: 0.05 });
+
+  // Chart bars
+  const { ref: chartRef } = useScrollReveal<HTMLDivElement>({ threshold: 0.3 });
+
+  // Stat cards + win rate bar
+  const { ref: statsRef, visible: statsVisible } = useScrollReveal<HTMLDivElement>({ threshold: 0.2 });
+
+  // Sidebar stat count-ups
+  const profitFactor = useCountUp({ target: 2.14, decimals: 2, duration: 1000 });
+  const avgRR = useCountUp({ target: 2.0, decimals: 2, suffix: "R", duration: 900 });
+  const bestTrade = useCountUp({ target: 210, decimals: 2, prefix: "+$", duration: 1100 });
+
   return (
     <section id="preview" className="max-w-6xl mx-auto px-6 py-20">
-      <div className="max-w-md mb-12 mx-auto text-center">
+      <div ref={headingRef} className="max-w-md mb-12 mx-auto text-center reveal">
         <p className="text-xs font-dm-mono text-text-3 uppercase tracking-widest mb-3">
           {l.productLabel}
         </p>
@@ -44,7 +65,10 @@ export function ProductPreview() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Journal list — 2 cols */}
-        <div className="lg:col-span-2 bg-surface border border-border rounded-2xl overflow-hidden">
+        <div
+          ref={journalRef}
+          className="lg:col-span-2 bg-surface border border-border rounded-2xl overflow-hidden reveal-scale"
+        >
           <div className="px-5 py-4 border-b border-border flex items-center justify-between">
             <span className="text-sm font-medium text-text font-dm-sans">
               {l.productJournal}
@@ -64,9 +88,18 @@ export function ProductPreview() {
                 {l.productThisWeek}
               </span>
             </div>
-            {WEEK_TRADES.map((trade, i) => (
-              <MockTradeCard key={i} trade={trade} />
-            ))}
+            {/* Staggered trade cards */}
+            <div ref={tradesRef} className="flex flex-col gap-2 reveal-grid">
+              {WEEK_TRADES.map((trade, i) => (
+                <div
+                  key={i}
+                  className="reveal-sm"
+                  style={{ animationDelay: `${i * 80}ms` }}
+                >
+                  <MockTradeCard trade={trade} />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -81,21 +114,40 @@ export function ProductPreview() {
               {formatPnl(WEEK_STATS.pnl)}
             </div>
 
-            <div className="flex items-end gap-2 h-20">
-              {DAILY_BARS.map((bar) => {
+            {/* Chart bars — animated on scroll */}
+            <div
+              ref={chartRef}
+              className="flex items-end gap-2 h-20 reveal-chart"
+            >
+              {DAILY_BARS.map((bar, i) => {
                 const pct = Math.abs(bar.pnl) / maxAbs;
                 const height = Math.max(pct * 80, 4);
                 const isPos = bar.pnl > 0;
                 const isNeutral = bar.pnl === 0;
                 return (
-                  <div key={bar.label} className="flex flex-col items-center gap-1 flex-1">
+                  <div
+                    key={bar.label}
+                    className="flex flex-col items-center gap-1 flex-1"
+                  >
                     <div
-                      className={`w-full rounded-sm ${
-                        isNeutral ? "bg-border-dark" : isPos ? "bg-green-bg border border-green-br" : "bg-red-bg border border-red-br"
+                      className={`w-full rounded-sm bar-animate ${
+                        isNeutral
+                          ? "bg-border-dark"
+                          : isPos
+                          ? "bg-green-bg border border-green-br"
+                          : "bg-red-bg border border-red-br"
                       }`}
-                      style={{ height: `${height}px` }}
+                      style={
+                        {
+                          height: `${height}px`,
+                          "--bar-delay": `${i * 80}ms`,
+                          transformOrigin: "bottom",
+                        } as React.CSSProperties
+                      }
                     />
-                    <span className="text-xs text-text-3 font-dm-mono">{bar.label}</span>
+                    <span className="text-xs text-text-3 font-dm-mono">
+                      {bar.label}
+                    </span>
                   </div>
                 );
               })}
@@ -103,25 +155,60 @@ export function ProductPreview() {
           </div>
 
           {/* Stat cards */}
-          <div className="bg-surface border border-border rounded-2xl p-5 flex flex-col gap-4">
+          <div
+            ref={statsRef}
+            className="bg-surface border border-border rounded-2xl p-5 flex flex-col gap-4"
+          >
             <div className="flex items-center justify-between">
-              <span className="text-xs text-text-3 font-dm-sans">{l.productWinRate}</span>
-              <span className="text-sm font-dm-mono font-medium text-text">60%</span>
+              <span className="text-xs text-text-3 font-dm-sans">
+                {l.productWinRate}
+              </span>
+              <span className="text-sm font-dm-mono font-medium text-text">
+                60%
+              </span>
             </div>
+            {/* Win rate bar — animates width when in view */}
             <div className="w-full h-1.5 bg-surface2 rounded-full overflow-hidden">
-              <div className="h-full bg-teal rounded-full" style={{ width: "60%" }} />
+              <div
+                className="h-full bg-teal rounded-full"
+                style={{
+                  width: statsVisible ? "60%" : "0%",
+                  transition: "width 0.9s cubic-bezier(0.22,1,0.36,1) 300ms",
+                }}
+              />
             </div>
             <div className="flex items-center justify-between pt-1 border-t border-border">
-              <span className="text-xs text-text-3 font-dm-sans">{l.productProfitFactor}</span>
-              <span className="text-sm font-dm-mono font-medium text-green">2.14</span>
+              <span className="text-xs text-text-3 font-dm-sans">
+                {l.productProfitFactor}
+              </span>
+              <span
+                ref={profitFactor.ref as React.RefObject<HTMLSpanElement>}
+                className="text-sm font-dm-mono font-medium text-green"
+              >
+                {profitFactor.display}
+              </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xs text-text-3 font-dm-sans">{l.productAvgRR}</span>
-              <span className="text-sm font-dm-mono font-medium text-text">2.00R</span>
+              <span className="text-xs text-text-3 font-dm-sans">
+                {l.productAvgRR}
+              </span>
+              <span
+                ref={avgRR.ref as React.RefObject<HTMLSpanElement>}
+                className="text-sm font-dm-mono font-medium text-text"
+              >
+                {avgRR.display}
+              </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-xs text-text-3 font-dm-sans">{l.productBestTrade}</span>
-              <span className="text-sm font-dm-mono font-medium text-green">+$210.00</span>
+              <span className="text-xs text-text-3 font-dm-sans">
+                {l.productBestTrade}
+              </span>
+              <span
+                ref={bestTrade.ref as React.RefObject<HTMLSpanElement>}
+                className="text-sm font-dm-mono font-medium text-green"
+              >
+                {bestTrade.display}
+              </span>
             </div>
           </div>
         </div>

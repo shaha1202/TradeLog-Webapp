@@ -14,6 +14,8 @@ export async function middleware(request: NextRequest) {
       pathname === "/" ||
       pathname.startsWith("/privacy") ||
       pathname.startsWith("/terms") ||
+      pathname.startsWith("/about") ||
+      pathname.startsWith("/contact") ||
       pathname.startsWith("/api") ||
       pathname.startsWith("/auth") ||
       pathname.startsWith("/_next");
@@ -77,7 +79,11 @@ export async function middleware(request: NextRequest) {
   // In dev, also allow landing routes so the landing page is previewable on localhost
   const isDevLandingRoute =
     process.env.NODE_ENV === "development" &&
-    (pathname === "/" || pathname.startsWith("/privacy") || pathname.startsWith("/terms"));
+    (pathname === "/" ||
+      pathname.startsWith("/privacy") ||
+      pathname.startsWith("/terms") ||
+      pathname.startsWith("/about") ||
+      pathname.startsWith("/contact"));
 
   const isPublic =
     isDevLandingRoute ||

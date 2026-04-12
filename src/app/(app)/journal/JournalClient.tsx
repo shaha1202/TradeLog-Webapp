@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState, useEffect, useRef } from "react";
 import type { Trade, Profile } from "@/types";
 import { formatPnl, formatTime } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n";
+import { createClient } from "@/lib/supabase/client";
+import ImportTradesModal from "@/components/ImportTradesModal";
 
 function groupByDate(trades: Trade[], today: string, yesterday: string, lang: string) {
   const groups: Record<string, Trade[]> = {};
@@ -89,8 +92,29 @@ interface Props {
 export default function JournalClient({ trades, profile, todayStats }: Props) {
   const { t, lang } = useLanguage();
   const j = t.journal;
+  const router = useRouter();
   const [translatedFeedbacks, setTranslatedFeedbacks] = useState<Record<string, string>>({});
   const translateCacheRef = useRef<Record<string, Record<string, string>>>({});
+  const [importOpen, setImportOpen] = useState(false);
+  const [currentTradeCount, setCurrentTradeCount] = useState(trades.length);
+  const [importToast, setImportToast] = useState<{ show: boolean; message: string }>({ show: false, message: "" });
+
+  async function openImport() {
+    // Refresh trade count from DB before opening
+    const supabase = createClient();
+    const { count } = await supabase
+      .from("trades")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", profile?.id ?? "");
+    setCurrentTradeCount(count ?? trades.length);
+    setImportOpen(true);
+  }
+
+  function handleImported(count: number) {
+    setImportToast({ show: true, message: `${count} ${j.importSuccess}` });
+    setTimeout(() => setImportToast({ show: false, message: "" }), 3000);
+    router.refresh();
+  }
 
   useEffect(() => {
     if (lang === "uz") { setTranslatedFeedbacks({}); return; }
@@ -137,12 +161,25 @@ export default function JournalClient({ trades, profile, todayStats }: Props) {
           </h1>
           <p className="text-[12px] md:text-[13px] text-text-3 mt-1.5">{dateStr}</p>
         </div>
-        <Link href="/journal/new" className="flex items-center gap-2 px-4 md:px-[18px] py-2.5 md:py-[10px] bg-text text-bg border-none rounded-lg font-dm-sans text-[12px] md:text-[13px] font-medium no-underline transition-opacity hover:opacity-90 add-btn">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-            <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-          {j.newTrade}
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={openImport}
+            className="flex items-center gap-1.5 px-3 md:px-4 py-2.5 md:py-[10px] bg-surface border border-border rounded-lg font-dm-sans text-[12px] md:text-[13px] font-medium text-text transition-opacity hover:opacity-80"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            {j.importTrades}
+          </button>
+          <Link href="/journal/new" className="flex items-center gap-2 px-4 md:px-[18px] py-2.5 md:py-[10px] bg-text text-bg border-none rounded-lg font-dm-sans text-[12px] md:text-[13px] font-medium no-underline transition-opacity hover:opacity-90 add-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+              <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            {j.newTrade}
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-3 mb-6 md:mb-7">
@@ -174,6 +211,24 @@ export default function JournalClient({ trades, profile, todayStats }: Props) {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      <ImportTradesModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImported={handleImported}
+        profile={profile}
+        currentTradeCount={currentTradeCount}
+      />
+
+      {/* Import success toast */}
+      {importToast.show && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2.5 bg-text text-bg rounded-xl shadow-lg text-[13px] font-dm-sans font-medium animate-slide-up">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 6L9 17l-5-5" />
+          </svg>
+          {importToast.message}
         </div>
       )}
     </div>

@@ -23,9 +23,9 @@ export function PricingCard({
 }: PricingCardProps) {
   return (
     <div
-      className={`rounded-2xl border p-6 flex flex-col gap-6 ${
+      className={`rounded-2xl border p-6 flex flex-col gap-6 card-hover ${
         highlighted
-          ? "bg-teal-bg border-teal-br"
+          ? "bg-teal-bg border-teal-br hover:-translate-y-1 hover:scale-[1.01]"
           : "bg-surface border-border"
       }`}
     >
@@ -87,7 +87,7 @@ export function PricingCard({
 
       <a
         href={`${process.env.NEXT_PUBLIC_APP_URL}/login`}
-        className={`w-full text-center text-sm font-medium font-dm-sans py-2.5 rounded-lg transition-opacity hover:opacity-90 ${
+        className={`w-full text-center text-sm font-medium font-dm-sans py-2.5 rounded-lg transition-all hover:opacity-90 active:scale-95 ${
           highlighted
             ? "bg-teal text-white"
             : "bg-surface2 border border-border text-text"

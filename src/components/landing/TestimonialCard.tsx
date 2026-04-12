@@ -12,7 +12,7 @@ export function TestimonialCard({
   initials,
 }: TestimonialCardProps) {
   return (
-    <div className="bg-surface border border-border rounded-xl p-5 flex flex-col gap-4">
+    <div className="bg-surface border border-border rounded-xl p-5 flex flex-col gap-4 card-hover group">
       <div className="flex gap-0.5">
         {Array.from({ length: 5 }).map((_, i) => (
           <svg
@@ -22,6 +22,8 @@ export function TestimonialCard({
             viewBox="0 0 12 12"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
+            className="transition-transform duration-150 group-hover:scale-110"
+            style={{ transitionDelay: `${i * 30}ms` }}
           >
             <path
               d="M6 1L7.5 4.5H11L8 6.5L9 10L6 8L3 10L4 6.5L1 4.5H4.5L6 1Z"
@@ -40,9 +42,7 @@ export function TestimonialCard({
           </span>
         </div>
         <div>
-          <div className="text-xs font-medium text-text font-dm-sans">
-            {name}
-          </div>
+          <div className="text-xs font-medium text-text font-dm-sans">{name}</div>
           <div className="text-xs text-text-3 font-dm-sans">{role}</div>
         </div>
       </div>
