@@ -9,9 +9,8 @@ function getSupabaseAdmin() {
   );
 }
 
-const whop = new Whop({ apiKey: process.env.WHOP_API_KEY! });
-
 export async function POST(req: NextRequest) {
+  const whop = new Whop({ apiKey: process.env.WHOP_API_KEY! });
   const body = await req.text();
   const headers: Record<string, string> = {};
   req.headers.forEach((value, key) => {
