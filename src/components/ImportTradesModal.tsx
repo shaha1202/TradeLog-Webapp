@@ -3,11 +3,11 @@
 import { useRef, useState, useCallback } from "react";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
-import { createClient } from "@/lib/supabase/client";
 import { calcRR } from "@/lib/utils";
 import { BROKERS, type BrokerConfig, type FieldMapping } from "@/lib/brokers";
 import type { Profile } from "@/types";
 import { useLanguage } from "@/lib/i18n";
+import { FREE_TRADE_LIMIT, isProPlan } from "@/lib/plans";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -36,7 +36,6 @@ interface Props {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const FREE_LIMIT = 3;
 const CATEGORIES: { key: BrokerConfig["category"]; labelKey: keyof ReturnType<typeof useLanguage>["t"]["journal"] }[] = [
   { key: "forex", labelKey: "importCategoryForex" },
   { key: "crypto", labelKey: "importCategoryCrypto" },
@@ -343,7 +342,7 @@ function mapRowsToTrades(
 
     let _overLimit = false;
     if (_valid) {
-      if (isFree && currentTradeCount + validIndex >= FREE_LIMIT) {
+    if (isFree && currentTradeCount + validIndex >= FREE_TRADE_LIMIT) {
         _overLimit = true;
       }
       validIndex++;
@@ -627,10 +626,10 @@ export default function ImportTradesModal({
   const [parseError, setParseError] = useState<string | null>(null);
   const [detectedHeaders, setDetectedHeaders] = useState<string[]>([]);
 
-  const isPro = profile?.plan !== "free";
+  const isPro = isProPlan(profile);
   const validRows = parsedRows.filter((r) => r._valid && !r._overLimit);
   const invalidCount = parsedRows.filter((r) => !r._valid).length;
-  const remainingFree = Math.max(0, FREE_LIMIT - currentTradeCount);
+  const remainingFree = Math.max(0, FREE_TRADE_LIMIT - currentTradeCount);
 
   const categoryLabel = (key: BrokerConfig["category"]): string => {
     if (key === "forex") return j.importCategoryForex;
@@ -644,7 +643,10 @@ export default function ImportTradesModal({
     setParseError(null);
     setDetectedHeaders([]);
     try {
-      const raw = await parseFile(file);
+      const parsed = await parseFile(file);
+      const raw = selectedBroker.transformRows
+        ? selectedBroker.transformRows(parsed, { fileName: file.name })
+        : parsed;
       if (raw.length === 0) {
         setParseError(j.importParseError);
         return;
@@ -661,12 +663,7 @@ export default function ImportTradesModal({
 
   async function handleImport() {
     setStep("importing");
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setStep("preview"); return; }
-
     const toInsert = validRows.map((r) => ({
-      user_id: user.id,
       asset: r.asset,
       direction: r.direction,
       entry: r.entry,
@@ -679,13 +676,19 @@ export default function ImportTradesModal({
       created_at: r.created_at,
     }));
 
-    // Batch insert — 50 rows at a time
-    for (let i = 0; i < toInsert.length; i += 50) {
-      const batch = toInsert.slice(i, i + 50);
-      await supabase.from("trades").insert(batch);
+    const res = await fetch("/api/trades/import", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ trades: toInsert }),
+    });
+
+    if (!res.ok) {
+      setStep("preview");
+      return;
     }
 
-    onImported(toInsert.length);
+    const data = await res.json() as { imported?: number };
+    onImported(data.imported ?? toInsert.length);
     handleClose();
   }
 

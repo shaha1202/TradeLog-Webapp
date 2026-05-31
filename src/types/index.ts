@@ -9,6 +9,7 @@ export interface Profile {
   currency: string;
   main_pair: string | null;
   strategy: string[] | null;
+  trading_rules: string[] | null;
   feedback_enabled: boolean;
   created_at: string;
 }
@@ -34,7 +35,9 @@ export interface Trade {
   ai_narrative: string | null;
   ai_feedback: string | null;
   checklist: Record<string, boolean> | null;
+  rule_checklist: Record<string, boolean> | null;
   mood: string[] | null;
+  mistake_tags: string[] | null;
   plan_adherence: number | null;
   went_well: string | null;
   improve: string | null;

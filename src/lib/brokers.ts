@@ -28,6 +28,16 @@ export interface BrokerConfig {
   /** Which CSV column holds the trade open date/time */
   dateColumn?: string;
   dateFormat: "iso" | "mt4" | "unix_ms";
+  /**
+   * Optional pre-mapping hook. Runs on the raw parsed rows before alias
+   * mapping. Lets a broker reshape non-standard exports (e.g. collapse
+   * paired entry/exit rows into one row) and inject data only available
+   * from the file name. Return the rows unchanged if the shape doesn't apply.
+   */
+  transformRows?: (
+    rows: Record<string, string>[],
+    meta: { fileName: string }
+  ) => Record<string, string>[];
 }
 
 // ─── Shared transforms ──────────────────────────────────────────────────────
@@ -39,6 +49,75 @@ const toFloat = (v: string): number | null => {
   const n = parseFloat(v.replace(/[^\d.+-]/g, ""));
   return isNaN(n) ? null : n;
 };
+
+// ─── TradingView Bar Replay ─────────────────────────────────────────────────
+// The "Export trades" CSV from TradingView's Bar Replay has a different shape
+// than the Paper Trading export: each trade spans TWO rows (an "Entry" row and
+// an "Exit" row keyed by "Trade number"), there is no Symbol column (the
+// instrument lives only in the file name), and columns are named "Price USD",
+// "Size (qty)", "Net PnL USD", etc. We collapse each entry/exit pair into one
+// row with the standard headers the TradingView mapping already understands.
+
+// Replay_Trading_FOREXCOM_XAUUSD_2026-05-31_b8d7d.csv → "XAUUSD"
+function symbolFromReplayFileName(fileName: string): string {
+  const base = fileName.replace(/\.[^.]+$/, "");
+  const parts = base.split("_");
+  const dateIdx = parts.findIndex((p) => /^\d{4}-\d{2}-\d{2}$/.test(p));
+  if (dateIdx > 0) return parts[dateIdx - 1] ?? "";
+  return "";
+}
+
+function transformBarReplayRows(
+  rows: Record<string, string>[],
+  meta: { fileName: string }
+): Record<string, string>[] {
+  if (rows.length === 0) return rows;
+  const keys = Object.keys(rows[0]);
+  const lower = keys.map((k) => k.trim().toLowerCase());
+  const isBarReplay =
+    lower.includes("trade number") &&
+    lower.includes("type") &&
+    lower.some((k) => /net pnl/.test(k));
+  if (!isBarReplay) return rows;
+
+  const get = (row: Record<string, string>, name: string): string => {
+    const k = keys.find((h) => h.trim().toLowerCase() === name);
+    return k ? (row[k] ?? "") : "";
+  };
+  const getMatch = (row: Record<string, string>, re: RegExp): string => {
+    const k = keys.find((h) => re.test(h.trim().toLowerCase()));
+    return k ? (row[k] ?? "") : "";
+  };
+
+  const symbol = symbolFromReplayFileName(meta.fileName);
+
+  // Group rows by trade number, preserving first-seen order.
+  const groups = new Map<string, Record<string, string>[]>();
+  for (const row of rows) {
+    const tn = get(row, "trade number");
+    if (!tn) continue;
+    const group = groups.get(tn);
+    if (group) group.push(row);
+    else groups.set(tn, [row]);
+  }
+
+  const out: Record<string, string>[] = [];
+  for (const pair of Array.from(groups.values())) {
+    const entryRow = pair.find((r) => /entry/i.test(get(r, "type"))) ?? pair[0];
+    const exitRow =
+      pair.find((r) => /exit/i.test(get(r, "type"))) ?? pair[pair.length - 1];
+    out.push({
+      Symbol: symbol,
+      Side: get(entryRow, "type"), // "Entry short" / "Entry long"
+      "Entry Price": get(entryRow, "price usd"),
+      "Exit Price": get(exitRow, "price usd"),
+      Qty: get(entryRow, "size (qty)"),
+      Profit: getMatch(entryRow, /net pnl usd/),
+      "Date/Time": get(entryRow, "date and time"),
+    });
+  }
+  return out;
+}
 
 // ─── Broker Configs ──────────────────────────────────────────────────────────
 
@@ -784,18 +863,20 @@ export const BROKERS: BrokerConfig[] = [
   // ── Paper Trading ───────────────────────────────────────────────────────────
   {
     id: "tradingview",
-    name: "TradingView Paper",
+    name: "TradingView (Paper & Bar Replay)",
     category: "paper",
     steps: [
-      "Open TradingView and go to the Paper Trading account.",
-      "Click the clock icon (History) at the bottom of the chart.",
+      "Open TradingView (Paper Trading or Bar Replay).",
+      "Open the History / Trades panel at the bottom of the chart.",
       'In the Trades tab, click the "Export" icon (down arrow).',
       "A CSV file will be downloaded automatically.",
       "Upload it here.",
     ],
-    notes: "Only Paper Trading accounts support CSV export in TradingView.",
+    notes:
+      "Both Paper Trading and Bar Replay CSV exports are supported. For Bar Replay, the instrument is read from the file name.",
     dateColumn: "Date/Time",
     dateFormat: "iso",
+    transformRows: transformBarReplayRows,
     mappings: [
       {
         field: "asset",

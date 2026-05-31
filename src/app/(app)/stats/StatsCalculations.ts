@@ -223,6 +223,63 @@ export function calcMoodPerformance(trades: Trade[]) {
     .sort((a, b) => b.pnl - a.pnl);
 }
 
+// --- Mistake Tag Performance ---
+
+export function calcMistakePerformance(trades: Trade[]) {
+  const mistakes: Record<string, { count: number; losses: number; pnl: number }> = {};
+  trades.forEach((t) => {
+    (t.mistake_tags ?? []).forEach((tag) => {
+      if (!mistakes[tag]) mistakes[tag] = { count: 0, losses: 0, pnl: 0 };
+      mistakes[tag].count++;
+      if (t.result === "loss" || (t.pnl ?? 0) < 0) mistakes[tag].losses++;
+      mistakes[tag].pnl += t.pnl ?? 0;
+    });
+  });
+
+  return Object.entries(mistakes)
+    .map(([tag, d]) => ({
+      tag,
+      count: d.count,
+      losses: d.losses,
+      lossRate: Math.round((d.losses / d.count) * 100),
+      pnl: parseFloat(d.pnl.toFixed(2)),
+    }))
+    .sort((a, b) => a.pnl - b.pnl);
+}
+
+// --- Trading Rule Discipline ---
+
+export function calcRulePerformance(trades: Trade[]) {
+  const allRules: string[] = [];
+  trades.forEach((t) => {
+    if (t.rule_checklist) {
+      Object.keys(t.rule_checklist).forEach((rule) => {
+        if (!allRules.includes(rule)) allRules.push(rule);
+      });
+    }
+  });
+
+  return allRules.map((rule) => {
+    const followed = trades.filter((t) => t.rule_checklist?.[rule] === true);
+    const broken = trades.filter((t) => t.rule_checklist?.[rule] === false);
+    const followedWins = followed.filter((t) => t.result === "win").length;
+    const brokenWins = broken.filter((t) => t.result === "win").length;
+    const followedPnl = followed.reduce((s, t) => s + (t.pnl ?? 0), 0);
+    const brokenPnl = broken.reduce((s, t) => s + (t.pnl ?? 0), 0);
+
+    return {
+      rule,
+      followedCount: followed.length,
+      brokenCount: broken.length,
+      followedWinRate: followed.length > 0 ? Math.round((followedWins / followed.length) * 100) : null,
+      brokenWinRate: broken.length > 0 ? Math.round((brokenWins / broken.length) * 100) : null,
+      followedPnl: parseFloat(followedPnl.toFixed(2)),
+      brokenPnl: parseFloat(brokenPnl.toFixed(2)),
+      pnlDelta: parseFloat((followedPnl - brokenPnl).toFixed(2)),
+    };
+  }).sort((a, b) => b.brokenCount - a.brokenCount);
+}
+
 // --- Asset Performance (enhanced) ---
 
 export function calcAssetPerformance(trades: Trade[]) {

@@ -8,6 +8,7 @@ import NavItem from "./ui/NavItem";
 import StatItem from "./ui/StatItem";
 import UserCard from "./ui/UserCard";
 import { useLanguage } from "@/lib/i18n";
+import { isProPlan } from "@/lib/plans";
 
 interface SidebarStats {
   pnl: number | null;
@@ -28,6 +29,7 @@ export default function Sidebar({
   const pathname = usePathname();
   const { theme, toggle } = useTheme();
   const { t } = useLanguage();
+  const isPro = isProPlan(profile);
 
   const navItems = [
     {
@@ -65,7 +67,7 @@ export default function Sidebar({
       id: "stats",
       href: "/stats",
       label: t.nav.stats,
-      badge: profile?.plan === "free" ? "Pro" : undefined,
+      badge: !isPro ? "Pro" : undefined,
       icon: (
         <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none">
           <path
@@ -205,7 +207,7 @@ export default function Sidebar({
       </div>
 
       {/* Free plan trade counter */}
-      {profile?.plan === "free" && (
+      {!isPro && (
         <div className="mb-3 px-1">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[10px] font-dm-mono text-text-3">
@@ -226,7 +228,7 @@ export default function Sidebar({
         <UserCard
           initials={getInitials(profile?.full_name ?? null)}
           name={profile?.full_name || t.settings?.traderFallback}
-          plan={profile?.plan === "free" ? t.settings.freePlan : t.settings.proPlan}
+          plan={!isPro ? t.settings.freePlan : t.settings.proPlan}
         />
       </div>
     </aside>

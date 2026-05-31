@@ -3,6 +3,15 @@
 @tailwind components;
 @tailwind utilities;
 
+kbd {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  padding: 2px 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
 /* ===== LIGHT THEME ===== */
 :root,
 [data-theme="light"] {

@@ -31,23 +31,31 @@ export function pnlColor(pnl: number | null): string {
   return "text-[var(--text-2)]";
 }
 
-export function formatDate(dateStr: string): string {
+type AppLang = "en" | "uz" | "ru";
+
+export function formatDate(dateStr: string, lang: AppLang = "uz"): string {
   const d = new Date(dateStr);
   const today = new Date();
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
 
-  if (d.toDateString() === today.toDateString()) return "Bugun";
-  if (d.toDateString() === yesterday.toDateString()) return "Kecha";
-  return d.toLocaleDateString("uz-UZ", {
+  if (d.toDateString() === today.toDateString()) {
+    return lang === "en" ? "Today" : lang === "ru" ? "Сегодня" : "Bugun";
+  }
+  if (d.toDateString() === yesterday.toDateString()) {
+    return lang === "en" ? "Yesterday" : lang === "ru" ? "Вчера" : "Kecha";
+  }
+  const locale = lang === "en" ? "en-US" : lang === "ru" ? "ru-RU" : "uz-UZ";
+  return d.toLocaleDateString(locale, {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
 }
 
-export function formatTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString("uz-UZ", {
+export function formatTime(dateStr: string, lang: AppLang = "uz"): string {
+  const locale = lang === "en" ? "en-US" : lang === "ru" ? "ru-RU" : "uz-UZ";
+  return new Date(dateStr).toLocaleTimeString(locale, {
     hour: "2-digit",
     minute: "2-digit",
   });

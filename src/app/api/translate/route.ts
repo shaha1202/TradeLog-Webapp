@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { rateLimit, requireApiUser } from "@/lib/api-guards";
+import { requireServerEnv } from "@/lib/env";
 
 const LANG_NAMES: Record<string, string> = {
   en: "English",
@@ -8,12 +10,21 @@ const LANG_NAMES: Record<string, string> = {
 };
 
 export async function POST(req: NextRequest) {
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const limited = rateLimit(req, "translate", 12);
+  if (limited) return limited;
+
+  const auth = await requireApiUser();
+  if ("error" in auth) return auth.error;
+
+  const anthropic = new Anthropic({ apiKey: requireServerEnv("ANTHROPIC_API_KEY") });
   try {
     const { texts, lang } = await req.json() as { texts: string[]; lang: string };
 
     if (!texts || !Array.isArray(texts) || texts.length === 0 || lang === "uz") {
       return NextResponse.json({ translations: texts });
+    }
+    if (texts.length > 50 || texts.some((text) => text.length > 2000)) {
+      return NextResponse.json({ error: "payload_too_large" }, { status: 413 });
     }
 
     const langName = LANG_NAMES[lang] ?? lang;

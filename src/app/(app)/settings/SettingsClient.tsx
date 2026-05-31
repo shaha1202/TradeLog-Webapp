@@ -10,8 +10,9 @@ import type { Profile } from "@/types";
 import Toast from "@/components/Toast";
 import { useLanguage } from "@/lib/i18n";
 import { LanguageSelector } from "@/components/LanguageSelector";
+import { isProPlan } from "@/lib/plans";
 
-type ModalType = "account" | "profile" | "plan" | "checklist" | "confluence" | "clear" | null;
+type ModalType = "account" | "profile" | "plan" | "checklist" | "rules" | "confluence" | "clear" | null;
 
 // ─── Sub-components defined OUTSIDE to prevent remount on every render ────────
 
@@ -160,6 +161,7 @@ export default function SettingsClient({
   const [modal, setModal] = useState<ModalType>(null);
   const [toast, setToast] = useState({ show: false, message: "" });
   const [showCheckout, setShowCheckout] = useState(false);
+  const [checkoutProcessing, setCheckoutProcessing] = useState(false);
 
   const STRATEGIES = ["ICT", "SMC", "Classic", "Algo", "Wyckoff", "Price Action", "Supply & Demand", "VSA"];
 
@@ -173,14 +175,18 @@ export default function SettingsClient({
   const [reminderTime, setReminderTime] = useState("09:00");
   const [riskWarning, setRiskWarning] = useState(true);
   const [checklistItems, setChecklistItems] = useState<string[]>(DEFAULT_CHECKLIST);
+  const [tradingRules, setTradingRules] = useState<string[]>(profile?.trading_rules ?? []);
   const [confluenceTags, setConfluenceTags] = useState<string[]>(DEFAULT_CONFLUENCE);
   const [newItem, setNewItem] = useState("");
+  const hasProfileTradingRules = Boolean(profile?.trading_rules?.length);
 
   useEffect(() => {
     const saved = localStorage.getItem("custom_checklist");
     const savedConf = localStorage.getItem("custom_confluence");
+    const savedRules = localStorage.getItem("custom_trading_rules");
     if (saved) setChecklistItems(JSON.parse(saved));
     if (savedConf) setConfluenceTags(JSON.parse(savedConf));
+    if (!hasProfileTradingRules && savedRules) setTradingRules(JSON.parse(savedRules));
 
     const savedReminder = localStorage.getItem("daily_reminder_enabled");
     const savedTime = localStorage.getItem("daily_reminder_time");
@@ -188,7 +194,7 @@ export default function SettingsClient({
     if (savedReminder !== null) setDailyReminder(savedReminder === "true");
     if (savedTime) setReminderTime(savedTime);
     if (savedRisk !== null) setRiskWarning(savedRisk === "true");
-  }, []);
+  }, [hasProfileTradingRules]);
 
   useEffect(() => {
     if (!dailyReminder) return;
@@ -203,7 +209,7 @@ export default function SettingsClient({
     };
     const interval = setInterval(checkAndNotify, 60000);
     return () => clearInterval(interval);
-  }, [dailyReminder, reminderTime]);
+  }, [dailyReminder, reminderTime, s.notificationBody]);
 
   const showToast = (msg: string) => setToast({ show: true, message: msg });
 
@@ -286,33 +292,46 @@ export default function SettingsClient({
     showToast(s.toastChecklistSaved);
   }
 
+  async function saveTradingRules() {
+    const supabase = createClient();
+    const cleaned = [...tradingRules, newItem]
+      .map((rule) => rule.trim())
+      .filter(Boolean)
+      .filter((rule, index, arr) => arr.indexOf(rule) === index);
+    localStorage.setItem("custom_trading_rules", JSON.stringify(cleaned));
+    const { error } = await supabase
+      .from("profiles")
+      .update({ trading_rules: cleaned.length > 0 ? cleaned : null })
+      .eq("id", userId);
+    setProfile((p) => (p ? { ...p, trading_rules: cleaned.length > 0 ? cleaned : null } : p));
+    setTradingRules(cleaned);
+    setNewItem("");
+    setModal(null);
+    showToast(error ? `${s.toastTradingRulesSaved} (local)` : s.toastTradingRulesSaved);
+    fetch("/api/profile/revalidate", { method: "POST" });
+  }
+
   function saveConfluence() {
     localStorage.setItem("custom_confluence", JSON.stringify(confluenceTags));
     setModal(null);
     showToast(s.toastConfluenceSaved);
   }
 
-  async function handleCheckoutComplete(planId: string) {
-    try {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        await supabase.from("profiles").update({ plan: "pro_monthly" }).eq("id", user.id);
-        setProfile((p) => (p ? { ...p, plan: "pro_monthly" } : p));
-      }
-    } catch {}
-    setShowCheckout(false);
-    setModal(null);
+  async function handleCheckoutComplete() {
+    setCheckoutProcessing(true);
     confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, colors: ["#14b8a6", "#f59e0b", "#ffffff"] });
     setTimeout(() => confetti({ particleCount: 60, spread: 100, origin: { y: 0.5 } }), 300);
-    showToast(s.toastAccountSaved);
+    showToast(s.checkoutProcessing);
     fetch("/api/profile/revalidate", { method: "POST" });
-    router.refresh();
+    setTimeout(() => {
+      setShowCheckout(false);
+      setCheckoutProcessing(false);
+      setModal(null);
+      router.refresh();
+    }, 2500);
   }
 
-  const isPro = profile?.plan !== "free";
+  const isPro = isProPlan(profile);
 
   return (
     <div>
@@ -413,6 +432,24 @@ export default function SettingsClient({
           name={s.checklist}
           sub={s.checklistSub}
           onClick={() => setModal("checklist")}
+        />
+        <SetRow
+          icon={
+            <>
+              <path
+                d="M8 7h8M8 12h8M8 17h5M4.5 7h.01M4.5 12h.01M4.5 17h.01"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </>
+          }
+          iconBg="var(--teal-bg)"
+          iconColor="var(--teal)"
+          name={s.tradingRules}
+          sub={s.tradingRulesSub}
+          onClick={() => setModal("rules")}
         />
         <SetRow
           icon={
@@ -748,15 +785,22 @@ export default function SettingsClient({
                     </div>
                   </>
                 ) : (
-                  <div className="rounded-lg overflow-hidden border border-border mb-2.5" style={{ minHeight: 300 }}>
-                    <WhopCheckoutEmbed
-                      planId={process.env.NEXT_PUBLIC_WHOP_PLAN_ID!}
-                      theme={theme}
-                      skipRedirect={true}
-                      promoCode={process.env.NEXT_PUBLIC_WHOP_PROMO_CODE || undefined}
-                      onComplete={handleCheckoutComplete}
-                    />
-                  </div>
+                  <>
+                    <div className="rounded-lg overflow-hidden border border-border mb-2.5" style={{ minHeight: 300 }}>
+                      <WhopCheckoutEmbed
+                        planId={process.env.NEXT_PUBLIC_WHOP_PLAN_ID!}
+                        theme={theme}
+                        skipRedirect={true}
+                        promoCode={process.env.NEXT_PUBLIC_WHOP_PROMO_CODE || undefined}
+                        onComplete={handleCheckoutComplete}
+                      />
+                    </div>
+                    {checkoutProcessing && (
+                      <div className="text-[12px] text-teal bg-teal-bg border border-teal-br rounded-lg p-3 mb-2.5">
+                        {s.checkoutProcessing}
+                      </div>
+                    )}
+                  </>
                 )}
 
                 <button
@@ -825,6 +869,55 @@ export default function SettingsClient({
                   className="w-full py-2.5 bg-none text-text-2 border-none text-[12px] md:text-[13px] cursor-pointer mt-2"
                 >
                   {s.cancel}
+                </button>
+              </>
+            )}
+
+            {modal === "rules" && (
+              <>
+                <div className="font-fraunces text-[17px] md:text-[20px] font-light mb-5 text-text">
+                  {s.tradingRulesTitle}
+                </div>
+                {tradingRules.map((item, i) => (
+                  <div key={i} className="flex items-center justify-between py-2 px-0 border-b border-border">
+                    <span className="text-[12px] md:text-[13px] text-text">{item}</span>
+                    <button
+                      onClick={() => setTradingRules((prev) => prev.filter((_, idx) => idx !== i))}
+                      className="bg-none border-none text-red cursor-pointer text-[14px] md:text-[16px] px-0 py-1"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                <div className="flex gap-2 mt-3.5">
+                  <input
+                    value={newItem}
+                    onChange={(e) => setNewItem(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && newItem.trim()) {
+                        setTradingRules((prev) => [...prev, newItem.trim()]);
+                        setNewItem("");
+                      }
+                    }}
+                    placeholder={s.tradingRulesPlaceholder}
+                  />
+                  <button
+                    onClick={() => {
+                      if (newItem.trim()) {
+                        setTradingRules((prev) => [...prev, newItem.trim()]);
+                        setNewItem("");
+                      }
+                    }}
+                    className="px-4 bg-text text-bg rounded-lg border-none cursor-pointer"
+                  >
+                    {s.add}
+                  </button>
+                </div>
+                <button
+                  onClick={saveTradingRules}
+                  className="w-full py-3 bg-text text-bg border-none rounded-lg font-dm-sans text-[13px] md:text-[14px] font-medium cursor-pointer mt-5"
+                >
+                  {s.save}
                 </button>
               </>
             )}

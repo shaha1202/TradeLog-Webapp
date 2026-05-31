@@ -174,8 +174,7 @@ export function ConfluenceChart({ data }: ConfluenceChartProps) {
             boxShadow: "var(--shadow)",
           }}
           labelStyle={{ color: "var(--text-3)", fontSize: "10px" }}
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          formatter={(value: any) => [`${value}%`, "Win Rate"]}
+          formatter={(value) => [`${value}%`, "Win Rate"]}
         />
         <Bar dataKey="winRate" radius={[0, 4, 4, 0]} maxBarSize={20}>
           {data.map((entry, i) => (
@@ -214,8 +213,7 @@ interface ChecklistPieChartProps {
   labels: { checked: string; unchecked: string; tradeCount: string };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function CustomTooltip({ active, payload, labels: tipLabels }: any) {
+function CustomTooltip({ active, payload, labels: tipLabels }: { active?: boolean; payload?: { value: number; name: string; payload: ChecklistPieData & { percent: number } }[]; labels: { checked: string; unchecked: string; tradeCount: string } }) {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload as ChecklistPieData & { percent: number };
   return (

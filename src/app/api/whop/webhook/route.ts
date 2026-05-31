@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import Whop from "@whop/sdk";
 import { createClient } from "@supabase/supabase-js";
+import { getPublicSupabaseEnv, requireServerEnv } from "@/lib/env";
 
 function getSupabaseAdmin() {
+  const { url } = getPublicSupabaseEnv();
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    url,
+    requireServerEnv("SUPABASE_SERVICE_ROLE_KEY")
   );
 }
 
 export async function POST(req: NextRequest) {
-  const whop = new Whop({ apiKey: process.env.WHOP_API_KEY! });
+  const whop = new Whop({ apiKey: requireServerEnv("WHOP_API_KEY") });
   const body = await req.text();
   const headers: Record<string, string> = {};
   req.headers.forEach((value, key) => {
@@ -21,7 +23,7 @@ export async function POST(req: NextRequest) {
   try {
     event = whop.webhooks.unwrap(body, {
       headers,
-      key: process.env.WHOP_WEBHOOK_SECRET,
+      key: requireServerEnv("WHOP_WEBHOOK_SECRET"),
     });
   } catch {
     return NextResponse.json({ error: "Webhook signature failed" }, { status: 400 });
@@ -51,8 +53,7 @@ export async function POST(req: NextRequest) {
       // Fallback: retrieve full membership from Whop API to get user email
       try {
         const fullMembership = await whop.memberships.retrieve(membership.id);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const userEmail = (fullMembership as any)?.user?.email as string | undefined;
+        const userEmail = (fullMembership as { user?: { email?: string } })?.user?.email as string | undefined;
 
         if (userEmail) {
           await supabase
@@ -78,8 +79,7 @@ export async function POST(req: NextRequest) {
     } else {
       try {
         const fullMembership = await whop.memberships.retrieve(membership.id);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const userEmail = (fullMembership as any)?.user?.email as string | undefined;
+        const userEmail = (fullMembership as { user?: { email?: string } })?.user?.email as string | undefined;
 
         if (userEmail) {
           await supabase

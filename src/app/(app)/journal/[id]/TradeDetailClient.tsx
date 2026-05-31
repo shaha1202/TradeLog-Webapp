@@ -8,6 +8,7 @@ import type { Trade, Profile } from "@/types";
 import { formatPnl, formatDate, formatTime } from "@/lib/utils";
 import Toast from "@/components/Toast";
 import { useLanguage } from "@/lib/i18n";
+import { isProPlan } from "@/lib/plans";
 
 export default function TradeDetailClient({ trade, profile }: { trade: Trade; profile: Profile | null }) {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
   const [translatedNarrative, setTranslatedNarrative] = useState<string | null>(null);
   const [translatedFeedback, setTranslatedFeedback] = useState<string | null>(null);
   const translateCacheRef = useRef<Record<string, { narrative?: string; feedback?: string }>>({});
+  const isPro = isProPlan(profile);
 
   useEffect(() => {
     if (lang === "uz") { setTranslatedNarrative(null); setTranslatedFeedback(null); return; }
@@ -121,7 +123,7 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
             {trade.pnl !== null ? formatPnl(trade.pnl, profile?.currency) : "—"}
           </div>
           <div className="text-[11px] md:text-[12px] text-text-3 mt-1 font-dm-mono">
-            {formatDate(trade.created_at)} · {formatTime(trade.created_at)}
+            {formatDate(trade.created_at, lang)} · {formatTime(trade.created_at, lang)}
           </div>
         </div>
       </div>
@@ -143,8 +145,8 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
           {trade.ai_feedback && (
             <div className="relative">
               <div className={`bg-amber-bg border border-amber-br border-l-[3px] border-amber rounded-r-lg py-2 md:py-3 px-3 md:px-4 text-[12px] md:text-[13px] leading-[1.7] text-text ${
-                profile?.plan === "free" ? "blur-sm select-none pointer-events-none" : ""
-              } ${!profile?.feedback_enabled && profile?.plan !== "free" ? "hidden" : ""}`}>
+                !isPro ? "blur-sm select-none pointer-events-none" : ""
+              } ${!profile?.feedback_enabled && isPro ? "hidden" : ""}`}>
                 <div className="text-[10px] font-medium tracking-[0.1em] uppercase text-amber mb-1.5 flex items-center gap-1.5">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
                     <path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17H8v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -153,7 +155,7 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
                 </div>
                 {translatedFeedback ?? trade.ai_feedback}
               </div>
-              {profile?.plan === "free" && (
+              {!isPro && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
                   <span className="text-[10px] bg-teal text-white px-2 py-0.5 rounded-full font-dm-mono font-medium">Pro</span>
                   <Link href="/settings" className="text-[11px] text-text-2 font-dm-sans hover:text-text transition-colors">
@@ -217,6 +219,18 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
                 </div>
               </div>
             )}
+            {trade.mistake_tags && trade.mistake_tags.length > 0 && (
+              <div className="mb-3">
+                <div className="text-[11px] text-text-3 mb-1.5">{d.mistakeTags}</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {trade.mistake_tags.map((tag) => (
+                    <span key={tag} className="py-1 md:py-[5px] px-2.5 md:px-3 rounded-lg text-[11px] md:text-[12px] bg-red-bg text-red border border-red-br">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
             {trade.plan_adherence !== null && (
               <div className="mb-3">
                 <div className="text-[11px] text-text-3 mb-1.5">{d.planScore}</div>
@@ -272,6 +286,20 @@ export default function TradeDetailClient({ trade, profile }: { trade: Trade; pr
                     </div>
                   );
                 })}
+              </div>
+            )}
+            {trade.rule_checklist && Object.keys(trade.rule_checklist).length > 0 && (
+              <div className="mt-3">
+                <div className="text-[11px] text-text-3 mb-2">{d.tradingRules}</div>
+                {Object.entries(trade.rule_checklist).map(([key, val]) => (
+                  <div key={key} className="flex items-center gap-2 mb-1.5">
+                    <div className="w-3.5 h-3.5 md:w-4 md:h-4 rounded-md flex-shrink-0" style={{
+                      background: val ? "var(--green)" : "var(--surface2)",
+                      border: `1px solid ${val ? "var(--green)" : "var(--border-dark)"}`,
+                    }} />
+                    <span className={`text-[11px] md:text-[12px] ${val ? "text-text" : "text-text-3"}`} style={{ textDecoration: val ? "none" : "line-through" }}>{key}</span>
+                  </div>
+                ))}
               </div>
             )}
           </div>

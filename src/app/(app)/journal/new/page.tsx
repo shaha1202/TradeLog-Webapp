@@ -3,11 +3,13 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import type { AIAnalysisResult, Profile } from "@/types";
 import Toast from "@/components/Toast";
 import { useLanguage } from "@/lib/i18n";
 import ImportTradesModal from "@/components/ImportTradesModal";
+import { FREE_TRADE_LIMIT, isProPlan } from "@/lib/plans";
 
 const DEFAULT_CONFLUENCE = [
   "FVG", "Order Block", "Liquidity Sweep", "Break of Structure",
@@ -24,6 +26,7 @@ export default function NewTradePage() {
 
   // Use translated arrays from i18n - technical terms stay hardcoded
   const MOODS = [...(t.common?.moods ?? ["Ishonchli", "Sabr bilan", "Xotirjam", "Shoshqaloq", "FOMO", "Stress", "Zavqli"])];
+  const MISTAKE_TAGS = [...(nt.defaultMistakeTags ?? ["FOMO", "Early exit", "Moved SL", "No plan", "Revenge trade"])];
   const DEFAULT_CHECKLIST = [...(t.settings?.defaultChecklistItems ?? [
     "HTF trend bilan mos yo'nalish",
     "Kamida 2 ta confluence bor",
@@ -64,7 +67,10 @@ export default function NewTradePage() {
   const [confluenceTags, setConfluenceTags] = useState<string[]>(DEFAULT_CONFLUENCE);
   const [checklist, setChecklist] = useState<Record<string, boolean>>({});
   const [checklistItems, setChecklistItems] = useState<string[]>(DEFAULT_CHECKLIST);
+  const [tradingRules, setTradingRules] = useState<string[]>([]);
+  const [ruleChecklist, setRuleChecklist] = useState<Record<string, boolean>>({});
   const [moods, setMoods] = useState<string[]>([]);
+  const [mistakeTags, setMistakeTags] = useState<string[]>([]);
   const [stars, setStars] = useState(0);
   const [wentWell, setWentWell] = useState("");
   const [improve, setImprove] = useState("");
@@ -73,6 +79,8 @@ export default function NewTradePage() {
   const [toast, setToast] = useState({ show: false, message: "" });
   const [tradeCount, setTradeCount] = useState(0);
   const [importOpen, setImportOpen] = useState(false);
+  const [riskWarningEnabled, setRiskWarningEnabled] = useState(true);
+  const [saveWarningAcknowledged, setSaveWarningAcknowledged] = useState(false);
 
   // Session draft key
   const DRAFT_KEY = "trade_draft_session";
@@ -102,6 +110,8 @@ export default function NewTradePage() {
         if (d.feedback) setFeedback(d.feedback);
         if (d.selectedConfluence) setSelectedConfluence(d.selectedConfluence);
         if (d.moods) setMoods(d.moods);
+        if (d.mistakeTags) setMistakeTags(d.mistakeTags);
+        if (d.ruleChecklist) setRuleChecklist(d.ruleChecklist);
         if (d.stars) setStars(d.stars);
         if (d.wentWell) setWentWell(d.wentWell);
         if (d.improve) setImprove(d.improve);
@@ -129,10 +139,14 @@ export default function NewTradePage() {
             setRiskDollar(((p.account_balance * p.default_risk) / 100).toFixed(2));
           }
         }
+        const savedRules = localStorage.getItem("custom_trading_rules");
+        setTradingRules(p.trading_rules ?? (savedRules ? JSON.parse(savedRules) : []));
         const saved = localStorage.getItem("custom_checklist");
         const savedConf = localStorage.getItem("custom_confluence");
+        const savedRiskWarning = localStorage.getItem("risk_warning_enabled");
         if (saved) setChecklistItems(JSON.parse(saved));
         if (savedConf) setConfluenceTags(JSON.parse(savedConf));
+        if (savedRiskWarning !== null) setRiskWarningEnabled(savedRiskWarning === "true");
       }
       setTradeCount(count ?? 0);
     };
@@ -144,6 +158,14 @@ export default function NewTradePage() {
     checklistItems.forEach((item) => { initial[item] = true; });
     setChecklist(initial);
   }, [checklistItems]);
+
+  useEffect(() => {
+    setRuleChecklist((prev) => {
+      const next: Record<string, boolean> = {};
+      tradingRules.forEach((rule) => { next[rule] = prev[rule] ?? true; });
+      return next;
+    });
+  }, [tradingRules]);
 
   const calcRR = useCallback(() => {
     const e = parseFloat(entry), s = parseFloat(sl), t = parseFloat(tp);
@@ -182,14 +204,18 @@ export default function NewTradePage() {
   }, [result, riskDollar, rr]);
 
   useEffect(() => {
+    setSaveWarningAcknowledged(false);
+  }, [riskPercent, result, mistakeTags, ruleChecklist]);
+
+  useEffect(() => {
     try {
       sessionStorage.setItem(DRAFT_KEY, JSON.stringify({
         asset, timeframe, session, direction, entry, sl, tp,
         lotSize, pnl, result, htfTrend, narrative, feedback,
-        selectedConfluence, moods, stars, wentWell, improve,
+        selectedConfluence, moods, mistakeTags, ruleChecklist, stars, wentWell, improve,
       }));
     } catch { /* ignore */ }
-  }, [asset, timeframe, session, direction, entry, sl, tp, lotSize, pnl, result, htfTrend, narrative, feedback, selectedConfluence, moods, stars, wentWell, improve]);
+  }, [asset, timeframe, session, direction, entry, sl, tp, lotSize, pnl, result, htfTrend, narrative, feedback, selectedConfluence, moods, mistakeTags, ruleChecklist, stars, wentWell, improve]);
 
   const handleFile = useCallback(async (file: File) => {
     setImageFile(file);
@@ -245,7 +271,7 @@ export default function NewTradePage() {
       setScanning(false);
       setFormVisible(true);
     }
-  }, [profile, lang]);
+  }, [profile, lang, nt.analyzeError]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -254,21 +280,62 @@ export default function NewTradePage() {
     if (file && file.type.startsWith("image/")) handleFile(file);
   }, [handleFile]);
 
+  const handlePaste = useCallback((e: ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.startsWith("image/")) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (file) {
+          handleFile(file);
+          setToast({ show: true, message: nt.pasteSuccess });
+          break;
+        }
+      }
+    }
+  }, [handleFile, nt.pasteSuccess]);
+
+  // Global paste listener — works anywhere on the page
+  useEffect(() => {
+    document.addEventListener("paste", handlePaste);
+    return () => document.removeEventListener("paste", handlePaste);
+  }, [handlePaste]);
+
   async function saveTrade() {
     if (!asset) { setToast({ show: true, message: nt.assetRequired }); return; }
+    const warnings: string[] = [];
+    const riskValue = parseFloat(riskPercent);
+    if (riskWarningEnabled && profile?.default_risk && !isNaN(riskValue) && riskValue > profile.default_risk) {
+      warnings.push(nt.riskWarningMessage);
+    }
+    if (result === "loss" && mistakeTags.length === 0) {
+      warnings.push(nt.lossMistakeReminder);
+    }
+    if (Object.values(ruleChecklist).some((checked) => checked === false)) {
+      warnings.push(nt.brokenRuleReminder);
+    }
+    if (warnings.length > 0 && !saveWarningAcknowledged) {
+      setSaveWarningAcknowledged(true);
+      setToast({ show: true, message: `${nt.disciplineWarningPrefix} ${warnings.join("; ")}. ${nt.saveAgainHint}` });
+      return;
+    }
     setSaving(true);
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.push("/login"); return; }
 
-    if (profile?.plan === "free" && tradeCount >= 3) {
+    if (!isProPlan(profile) && tradeCount >= FREE_TRADE_LIMIT) {
       setToast({ show: true, message: nt.freeLimitReached });
       setSaving(false);
       return;
     }
 
-    const { error } = await supabase.from("trades").insert({
-      user_id: user.id,
+    const res = await fetch("/api/trades", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
       asset: asset || null,
       timeframe: timeframe || null,
       session: session || null,
@@ -287,25 +354,20 @@ export default function NewTradePage() {
       ai_narrative: narrative || null,
       ai_feedback: feedback || null,
       checklist: checklist,
+      rule_checklist: Object.keys(ruleChecklist).length > 0 ? ruleChecklist : null,
       mood: moods.length > 0 ? moods : null,
+      mistake_tags: mistakeTags.length > 0 ? mistakeTags : null,
       plan_adherence: stars || null,
       went_well: wentWell || null,
       improve: improve || null,
+      }),
     });
 
     setSaving(false);
-    if (error) {
-      setToast({ show: true, message: nt.saveError + error.message });
+    if (!res.ok) {
+      const data = await res.json().catch(() => null) as { error?: string } | null;
+      setToast({ show: true, message: data?.error === "free_trade_limit_reached" ? nt.freeLimitReached : nt.saveError + (data?.error ?? "") });
     } else {
-      if (profile?.account_balance && pnl) {
-        const pnlVal = parseFloat(pnl);
-        if (!isNaN(pnlVal) && pnlVal !== 0) {
-          const supabase2 = createClient();
-          await supabase2.from("profiles").update({
-            account_balance: profile.account_balance + pnlVal,
-          }).eq("id", user.id);
-        }
-      }
       sessionStorage.removeItem(DRAFT_KEY);
       router.push("/journal");
       router.refresh();
@@ -313,7 +375,7 @@ export default function NewTradePage() {
   }
 
   const rrColor = rr === null ? "var(--text-2)" : rr >= 2 ? "var(--green)" : rr >= 1 ? "var(--amber)" : "var(--red)";
-  const isLimitReached = profile?.plan === "free" && tradeCount >= 3;
+  const isLimitReached = !isProPlan(profile) && tradeCount >= FREE_TRADE_LIMIT;
 
   return (
     <div>
@@ -367,7 +429,7 @@ export default function NewTradePage() {
       >
         {imagePreview ? (
           <>
-            <img src={imagePreview} alt="Chart" className="w-full rounded-xl" />
+            <Image src={imagePreview} alt="Chart" className="w-full rounded-xl" width={800} height={400} />
             <div
               onClick={() => fileInputRef.current?.click()}
               className="absolute inset-0 bg-[rgba(26,24,20,0.7)] flex flex-col items-center justify-center gap-2 opacity-0 hover:opacity-100 transition-opacity rounded-xl cursor-pointer"
@@ -393,6 +455,10 @@ export default function NewTradePage() {
             <div className="text-[12px] md:text-[13px] text-text-3">
               {nt.uploadSub}
             </div>
+            <div className="flex items-center justify-center gap-1.5 mt-2 text-[11px] text-text-3 font-dm-mono">
+              <kbd className="px-2 py-1 bg-surface3 rounded border border-border">⌘V</kbd>
+              <span>{nt.uploadPasteHint}</span>
+            </div>
           </>
         )}
         <input
@@ -400,6 +466,30 @@ export default function NewTradePage() {
           onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
         />
       </div>
+
+      {/* Alternative actions — Import & Manual entry */}
+      {!imagePreview && !scanning && !formVisible && (
+        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+          <button
+            onClick={() => setImportOpen(true)}
+            className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-surface border border-border rounded-xl font-dm-sans text-[13px] font-medium text-text transition-all hover:border-border-dark hover:shadow-[var(--shadow)] cursor-pointer"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            {t.journal.importTrades}
+          </button>
+          <button
+            onClick={() => setFormVisible(true)}
+            className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-surface border border-border rounded-xl font-dm-sans text-[13px] font-medium text-text transition-all hover:border-border-dark hover:shadow-[var(--shadow)] cursor-pointer"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+              <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            {nt.addWithoutScreenshot}
+          </button>
+        </div>
+      )}
 
       {/* Scanning */}
       {scanning && (
@@ -570,7 +660,7 @@ export default function NewTradePage() {
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
                     <path d="M9 18h6M10 22h4M12 2a7 7 0 017 7c0 2.38-1.19 4.47-3 5.74V17H8v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 017-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                  nt.aiFeedback
+                  {nt.aiFeedback}
                 </div>
                 {feedback}
               </div>
@@ -624,6 +714,39 @@ export default function NewTradePage() {
                 </div>
               </div>
               <div className="flex flex-col gap-1.5 md:gap-2 mb-3.5 md:mb-[14px]">
+                <label className="text-[11px] text-text-2">{nt.mistakeTags}</label>
+                <div className="flex flex-wrap gap-1.5">
+                  {MISTAKE_TAGS.map((tag) => (
+                    <button key={tag} onClick={() => setMistakeTags((prev) => prev.includes(tag) ? prev.filter((m) => m !== tag) : [...prev, tag])} className={`py-1 md:py-[5px] px-3 md:px-3 rounded-lg text-[11px] md:text-[12px] cursor-pointer transition-all select-none border ${
+                      mistakeTags.includes(tag)
+                        ? "border-red-br bg-red-bg text-red"
+                        : "border-border bg-surface2 text-text-2"
+                    }`}>
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex flex-col gap-2 mb-3.5 md:mb-[14px]">
+                <label className="text-[11px] text-text-2">{nt.tradingRules}</label>
+                {tradingRules.length === 0 ? (
+                  <Link href="/settings" className="text-[11px] text-text-3 underline">{t.tradeDetail.noRules}</Link>
+                ) : tradingRules.map((rule) => (
+                  <div key={rule} onClick={() => setRuleChecklist((prev) => ({ ...prev, [rule]: !prev[rule] }))} className="flex items-center gap-2.5 cursor-pointer select-none">
+                    <div className={`w-[18px] h-[18px] rounded-md border transition-all flex items-center justify-center ${
+                      ruleChecklist[rule] ? "border-green bg-green" : "border-border-dark bg-surface2"
+                    }`}>
+                      {ruleChecklist[rule] && (
+                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none">
+                          <path d="M20 6L9 17l-5-5" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </div>
+                    <span className="text-[12px] md:text-[13px] text-text">{rule}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-col gap-1.5 md:gap-2 mb-3.5 md:mb-[14px]">
                 <label className="text-[11px] text-text-2">{nt.planScore}</label>
                 <div className="flex gap-1 cursor-pointer">
                   {[1, 2, 3, 4, 5].map((n) => (
@@ -668,6 +791,7 @@ export default function NewTradePage() {
         onClose={() => setImportOpen(false)}
         onImported={(count) => {
           setImportOpen(false);
+          sessionStorage.setItem("first_import_insight_count", String(count));
           router.push("/journal");
           router.refresh();
         }}

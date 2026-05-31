@@ -1,10 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { rateLimit, requireProApiUser } from "@/lib/api-guards";
+import { requireServerEnv } from "@/lib/env";
 
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const limited = rateLimit(req, "stats-insight", 5);
+  if (limited) return limited;
+
+  const auth = await requireProApiUser();
+  if ("error" in auth) return auth.error;
+
+  const anthropic = new Anthropic({ apiKey: requireServerEnv("ANTHROPIC_API_KEY") });
   try {
     const stats = await req.json();
 

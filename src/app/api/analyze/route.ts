@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { isProPlan } from "@/lib/plans";
+import { rateLimit, requireApiUser } from "@/lib/api-guards";
+import { requireServerEnv } from "@/lib/env";
 
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const limited = rateLimit(req, "analyze", 8);
+  if (limited) return limited;
+
+  const auth = await requireApiUser();
+  if ("error" in auth) return auth.error;
+
+  const anthropic = new Anthropic({ apiKey: requireServerEnv("ANTHROPIC_API_KEY") });
   try {
     const { image, mimeType, balance, risk, lang } = await req.json();
 
@@ -14,6 +23,7 @@ export async function POST(req: NextRequest) {
 
     const LANG_NAMES: Record<string, string> = { en: "English", ru: "Russian", uz: "Uzbek" };
     const langName = LANG_NAMES[lang ?? "uz"] ?? "Uzbek";
+    const allowFeedback = isProPlan(auth.profile) && auth.profile.feedback_enabled;
 
     const prompt = `Analyze this TradingView chart screenshot.
 
@@ -36,7 +46,7 @@ Respond ONLY in JSON:
   "tp": number_or_null,
   "trend": "HTF trend description",
   "narrative": "3-4 sentences in ${langName}: chart structure, key zones, setup description",
-  "feedback": "2-3 sentences in ${langName}: setup strengths, weaknesses, recommendation (or null if disabled)"
+  "feedback": ${allowFeedback ? `"2-3 sentences in ${langName}: setup strengths, weaknesses, recommendation"` : "null"}
 }`;
 
     const response = await anthropic.messages.create({
@@ -67,6 +77,7 @@ Respond ONLY in JSON:
     }
 
     const parsed = JSON.parse(jsonMatch[0]);
+    if (!allowFeedback) parsed.feedback = null;
     return NextResponse.json(parsed);
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);

@@ -17,8 +17,11 @@ import {
   calcChecklistPerformance,
   calcAssetPerformance,
   calcMoodPerformance,
+  calcMistakePerformance,
+  calcRulePerformance,
 } from "./StatsCalculations";
 import { BalanceCurveChart, DailyPnlChart, ConfluenceChart, ChecklistPieChart } from "./StatsCharts";
+import { isProPlan } from "@/lib/plans";
 
 // ─── Locked widget (Pro gating) ─────────────────────────────────────────────
 
@@ -61,7 +64,7 @@ function LockedWidget({ title, desc, upgradeToPro }: { title: string; desc: stri
 export default function StatsClient({ trades, profile }: { trades: Trade[]; profile: Profile | null }) {
   const { t, lang } = useLanguage();
   const st = t.stats;
-  const isPro = profile?.plan !== "free";
+  const isPro = isProPlan(profile);
 
   const [period, setPeriod] = useState(7);
   const [aiInsight, setAiInsight] = useState<{
@@ -70,7 +73,14 @@ export default function StatsClient({ trades, profile }: { trades: Trade[]; prof
     improvements: string[];
     insight: string;
   } | null>(null);
+  const [weeklyReview, setWeeklyReview] = useState<{
+    summary: string;
+    mainLeak: string;
+    action: string;
+    focus: string[];
+  } | null>(null);
   const [loadingInsight, setLoadingInsight] = useState(false);
+  const [loadingWeekly, setLoadingWeekly] = useState(false);
   const [insightLoaded, setInsightLoaded] = useState(false);
 
   // Free users always see 7 days
@@ -87,12 +97,15 @@ export default function StatsClient({ trades, profile }: { trades: Trade[]; prof
   const checklistPerf = useMemo(() => calcChecklistPerformance(filtered), [filtered]);
   const assetPerf = useMemo(() => calcAssetPerformance(filtered), [filtered]);
   const moodPerf = useMemo(() => calcMoodPerformance(filtered), [filtered]);
+  const mistakePerf = useMemo(() => calcMistakePerformance(filtered), [filtered]);
+  const rulePerf = useMemo(() => calcRulePerformance(filtered), [filtered]);
 
   const periodLabel = effectivePeriod === 7 ? st.thisWeek : effectivePeriod === 30 ? st.thisMonth : effectivePeriod === 90 ? st.last3Mo : st.thisYear;
   const currency = profile?.currency;
 
   useEffect(() => {
     setAiInsight(null);
+    setWeeklyReview(null);
     setInsightLoaded(false);
   }, [effectivePeriod, lang]);
 
@@ -139,6 +152,21 @@ export default function StatsClient({ trades, profile }: { trades: Trade[]; prof
         setInsightLoaded(true);
       })
       .finally(() => setLoadingInsight(false));
+  }
+
+  function fetchWeeklyReview() {
+    if (filtered.length === 0 || loadingWeekly) return;
+    setLoadingWeekly(true);
+    fetch("/api/weekly-review", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lang }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.error) setWeeklyReview(data);
+      })
+      .finally(() => setLoadingWeekly(false));
   }
 
   return (
@@ -223,6 +251,11 @@ export default function StatsClient({ trades, profile }: { trades: Trade[]; prof
               <LockedWidget
                 title={st.lockedInsightTitle}
                 desc={st.lockedInsightDesc}
+                upgradeToPro={st.upgradeToPro}
+              />
+              <LockedWidget
+                title={st.weeklyReview}
+                desc={st.teaserInsight}
                 upgradeToPro={st.upgradeToPro}
               />
 
@@ -332,6 +365,49 @@ export default function StatsClient({ trades, profile }: { trades: Trade[]; prof
                   </div>
                 </div>
               </div>
+            ) : null}
+          </div>
+
+          <div className="bg-surface border border-border rounded-2xl p-4 md:p-5 mb-5 shadow-[var(--shadow)]">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <div className="text-[12px] md:text-[13px] font-medium text-text">{st.weeklyReview}</div>
+                <div className="text-[10px] md:text-[11px] text-text-3 mt-0.5">{st.weeklyReviewDesc}</div>
+              </div>
+              {!weeklyReview && filtered.length > 0 && (
+                <button
+                  onClick={fetchWeeklyReview}
+                  disabled={loadingWeekly}
+                  className="px-3.5 md:px-4 py-2 rounded-lg font-dm-sans text-[11px] md:text-[12px] font-medium cursor-pointer bg-teal text-white disabled:opacity-70"
+                >
+                  {loadingWeekly ? st.analyzing : st.getWeeklyReview}
+                </button>
+              )}
+            </div>
+            {weeklyReview ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                <div className="md:col-span-2 bg-teal-bg border border-teal-br rounded-lg p-3 md:p-4">
+                  <div className="text-[10px] font-semibold tracking-[0.1em] uppercase text-teal mb-2">{st.aiGeneral}</div>
+                  <p className="text-[12px] md:text-[13px] leading-[1.6] text-text m-0">{weeklyReview.summary}</p>
+                </div>
+                <div className="bg-red-bg border border-red-br rounded-lg p-3 md:p-4">
+                  <div className="text-[10px] font-semibold tracking-[0.1em] uppercase text-red mb-2">{st.aiImprovements}</div>
+                  <p className="text-[12px] md:text-[13px] leading-[1.6] text-text m-0">{weeklyReview.mainLeak}</p>
+                </div>
+                <div className="bg-green-bg border border-green-br rounded-lg p-3 md:p-4">
+                  <div className="text-[10px] font-semibold tracking-[0.1em] uppercase text-green mb-2">{st.aiKeyInsight}</div>
+                  <p className="text-[12px] md:text-[13px] leading-[1.6] text-text m-0">{weeklyReview.action}</p>
+                </div>
+                <div className="md:col-span-2 flex flex-wrap gap-1.5">
+                  {weeklyReview.focus.map((item) => (
+                    <span key={item} className="text-[11px] md:text-[12px] bg-surface2 border border-border rounded-lg px-2.5 py-1 text-text-2">
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="text-[12px] md:text-[13px] text-text-3">{st.noTrades}</div>
             ) : null}
           </div>
 
@@ -582,6 +658,57 @@ export default function StatsClient({ trades, profile }: { trades: Trade[]; prof
                     data={checklistPerf}
                     labels={{ checked: st.checked, unchecked: st.unchecked, tradeCount: st.tradeCount }}
                   />
+                </div>
+              )}
+
+              {/* Mistake Impact */}
+              {mistakePerf.length > 0 && (
+                <div className="bg-surface border border-border rounded-2xl p-4 md:p-6 mb-5 shadow-[var(--shadow)]">
+                  <div className="text-[10px] font-medium tracking-[0.12em] uppercase text-text-3 mb-2">{st.mistakeImpact}</div>
+                  <p className="text-[11px] text-text-3 mb-4">{st.mistakeImpactSub}</p>
+                  <div className="space-y-0">
+                    {mistakePerf.map((m) => (
+                      <div key={m.tag} className="flex items-center justify-between py-3 border-b border-border last:border-0">
+                        <div>
+                          <div className="text-[12px] md:text-[13px] font-medium text-text">{m.tag}</div>
+                          <div className="text-[10px] md:text-[11px] text-text-3 mt-0.5">{m.count} {st.tradeCount} · {m.lossRate}% · {m.losses}L</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-dm-mono text-[12px] md:text-[13px] font-medium" style={{ color: m.pnl >= 0 ? "var(--green)" : "var(--red)" }}>
+                            {formatPnl(m.pnl, currency)}
+                          </div>
+                          <div className="text-[10px] font-dm-mono text-red">{m.losses}L</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Rule Discipline */}
+              {rulePerf.length > 0 && (
+                <div className="bg-surface border border-border rounded-2xl p-4 md:p-6 mb-5 shadow-[var(--shadow)]">
+                  <div className="text-[10px] font-medium tracking-[0.12em] uppercase text-text-3 mb-2">{st.ruleDiscipline}</div>
+                  <p className="text-[11px] text-text-3 mb-4">{st.ruleDisciplineSub}</p>
+                  <div className="space-y-3">
+                    {rulePerf.map((r) => (
+                      <div key={r.rule} className="bg-surface2 rounded-lg p-3 md:p-4">
+                        <div className="text-[12px] md:text-[13px] font-medium text-text mb-3">{r.rule}</div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <div className="text-[10px] text-text-3 uppercase tracking-[0.08em] mb-1">{st.followed}</div>
+                            <div className="font-dm-mono text-[12px] text-green">{formatPnl(r.followedPnl, currency)}</div>
+                            <div className="text-[10px] text-text-3 mt-0.5">{r.followedCount} {st.tradeCount} · {r.followedWinRate ?? "—"}%</div>
+                          </div>
+                          <div>
+                            <div className="text-[10px] text-text-3 uppercase tracking-[0.08em] mb-1">{st.broken}</div>
+                            <div className="font-dm-mono text-[12px]" style={{ color: r.brokenPnl >= 0 ? "var(--green)" : "var(--red)" }}>{formatPnl(r.brokenPnl, currency)}</div>
+                            <div className="text-[10px] text-text-3 mt-0.5">{r.brokenCount} {st.tradeCount} · {r.brokenWinRate ?? "—"}%</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </>

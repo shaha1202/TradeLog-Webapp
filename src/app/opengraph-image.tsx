@@ -1,11 +1,17 @@
 import { ImageResponse } from "next/og";
+import fs from "fs";
+import path from "path";
 
-export const runtime = "edge";
 export const alt = "TradeLog — AI-Powered Trading Journal";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default function OGImage() {
+  const logoData = fs.readFileSync(
+    path.join(process.cwd(), "public/logo-transparent.png")
+  );
+  const logoBase64 = `data:image/png;base64,${logoData.toString("base64")}`;
+
   return new ImageResponse(
     (
       <div
@@ -49,30 +55,13 @@ export default function OGImage() {
 
         {/* TOP: Logo + badge */}
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <div
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: 12,
-              background: "#0f766e",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 30,
-            }}
-          >
-            📈
-          </div>
-          <span
-            style={{
-              fontSize: 26,
-              fontWeight: 600,
-              color: "#1a1814",
-              letterSpacing: "-0.5px",
-            }}
-          >
-            TradeLog
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
+          <img
+            src={logoBase64}
+            width={220}
+            height={60}
+            style={{ objectFit: "contain", objectPosition: "left center" }}
+          />
           <div
             style={{
               marginLeft: 8,

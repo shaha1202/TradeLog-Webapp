@@ -40,7 +40,7 @@ function StatCard({ label, value, colorClass }: { label: string; value: string; 
   );
 }
 
-function TradeCard({ trade, feedbackEnabled, translatedFeedback }: { trade: Trade; feedbackEnabled: boolean; translatedFeedback?: string }) {
+function TradeCard({ trade, feedbackEnabled, translatedFeedback, lang }: { trade: Trade; feedbackEnabled: boolean; translatedFeedback?: string; lang: "en" | "uz" | "ru" }) {
   const pnlColor = trade.pnl === null ? "" : trade.pnl > 0 ? "var(--green)" : trade.pnl < 0 ? "var(--red)" : "var(--text-2)";
   const dirColor = trade.direction === "LONG" ? { bg: "var(--green-bg)", color: "var(--green)" } : trade.direction === "SHORT" ? { bg: "var(--red-bg)", color: "var(--red)" } : { bg: "var(--surface2)", color: "var(--text-2)" };
   const resStyle = trade.result === "win" ? { bg: "var(--green-bg)", color: "var(--green)" } : trade.result === "loss" ? { bg: "var(--red-bg)", color: "var(--red)" } : { bg: "var(--amber-bg)", color: "var(--amber)" };
@@ -77,7 +77,7 @@ function TradeCard({ trade, feedbackEnabled, translatedFeedback }: { trade: Trad
             {(() => { const txt = translatedFeedback ?? trade.ai_feedback; return txt.slice(0, 120) + (txt.length > 120 ? "..." : ""); })()}
           </div>
         )}
-        <div className="text-[10px] md:text-[11px] text-text-3 font-dm-mono mt-2">{formatTime(trade.created_at)}</div>
+        <div className="text-[10px] md:text-[11px] text-text-3 font-dm-mono mt-2">{formatTime(trade.created_at, lang)}</div>
       </div>
     </Link>
   );
@@ -98,6 +98,15 @@ export default function JournalClient({ trades, profile, todayStats }: Props) {
   const [importOpen, setImportOpen] = useState(false);
   const [currentTradeCount, setCurrentTradeCount] = useState(trades.length);
   const [importToast, setImportToast] = useState<{ show: boolean; message: string }>({ show: false, message: "" });
+  const [firstInsightCount, setFirstInsightCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem("first_import_insight_count");
+    if (stored) {
+      setFirstInsightCount(Number(stored));
+      sessionStorage.removeItem("first_import_insight_count");
+    }
+  }, []);
 
   async function openImport() {
     // Refresh trade count from DB before opening
@@ -112,6 +121,7 @@ export default function JournalClient({ trades, profile, todayStats }: Props) {
 
   function handleImported(count: number) {
     setImportToast({ show: true, message: `${count} ${j.importSuccess}` });
+    setFirstInsightCount(count);
     setTimeout(() => setImportToast({ show: false, message: "" }), 3000);
     router.refresh();
   }
@@ -189,6 +199,18 @@ export default function JournalClient({ trades, profile, todayStats }: Props) {
         <StatCard label={j.avgRR} value={todayStats.avgRR !== null ? `${todayStats.avgRR.toFixed(2)}R` : "—"} />
       </div>
 
+      {firstInsightCount !== null && firstInsightCount > 0 && (
+        <div className="bg-teal-bg border border-teal-br rounded-xl p-4 mb-5 flex items-center justify-between gap-4">
+          <div>
+            <div className="text-[13px] font-medium text-text">{firstInsightCount} {j.importSuccess}</div>
+            <div className="text-[11px] text-text-3 mt-0.5">{t.stats.teaserInsight}</div>
+          </div>
+          <Link href="/stats" className="shrink-0 text-xs bg-teal text-white px-3 py-1.5 rounded-lg font-dm-sans font-medium whitespace-nowrap">
+            {t.stats.weeklyReview}
+          </Link>
+        </div>
+      )}
+
       {trades.length === 0 ? (
         <div className="text-center py-16 md:py-20 px-6 md:px-10">
           <div className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-5 opacity-20">
@@ -206,7 +228,7 @@ export default function JournalClient({ trades, profile, todayStats }: Props) {
               <div className="text-[10px] md:text-[11px] font-medium text-text-3 uppercase tracking-[0.1em] mb-2.5">{dateKey}</div>
               <div className="flex flex-col gap-2">
                 {(grouped[dateKey] as Trade[]).map((trade) => (
-                  <TradeCard key={trade.id} trade={trade} feedbackEnabled={profile?.feedback_enabled ?? true} translatedFeedback={translatedFeedbacks[trade.id]} />
+                  <TradeCard key={trade.id} trade={trade} feedbackEnabled={profile?.feedback_enabled ?? true} translatedFeedback={translatedFeedbacks[trade.id]} lang={lang} />
                 ))}
               </div>
             </div>
